@@ -53,25 +53,17 @@ uint32_t rx_index = 0;
 char command_buffer[20];
 double param1, param2, param3;
 
-static void print_MOTOR(char *msg, RoverArmMotor *pMotor)
+static void print_motor(char *msg, RoverArmMotor *pMotor)
 {
-  double current_angle_multi;
-  double current_angle_sw;
-  pMotor->get_current_angle_sw(&current_angle_sw);
-  printf("%s setpoint %.2f, angle_sw %.2f, output %.2f\r\n",
-         msg,
-         pMotor->setpoint / pMotor->gearRatio,
-         current_angle_sw / pMotor->gearRatio,
-         pMotor->output);
+    double current_angle_multi;
+    double current_angle_sw;
+    pMotor->get_current_angle_sw(&current_angle_sw);
+    printf("%s setpoint %.2f, angle_sw %.2f, output %.2f\r\n",
+           msg,
+           pMotor->setpoint / pMotor->gearRatio,
+           current_angle_sw / pMotor->gearRatio,
+           pMotor->output);
 }
-
-// Pin AMT22_1(GPIOC, GPIO_PIN_7); //D7
-// Pin AMT22_2(GPIOC, GPIO_PIN_8); // TOP RIGHT
-// Pin CYTRON_DIR_1(CYTRON_DIR_1_GPIO_Port, CYTRON_DIR_1_Pin);
-// Pin DIR2(DIR2_GPIO_Port, DIR2_Pin); //D14
-// Pin PWM1(PWM1_GPIO_Port, PWM1_Pin, &htim1, TIM_CHANNEL_2);  // D1
-// Pin PWM2(PWM2_GPIO_Port, PWM2_Pin, &htim1, TIM_CHANNEL_3);  // D0
-// Pin PWM3(PWM3_GPIO_Port, PWM3_Pin, &htim2, TIM_CHANNEL_2);  // D3
 
 /*---------------------WRIST_ROLL_CYTRON---------------------*/
 #if TEST_WRIST_ROLL_CYTRON == 1
@@ -100,84 +92,99 @@ RoverArmMotor End_Effector(&hspi1, CYTRON_PWM_1, CYTRON_DIR_1, AMT22_1, CYTRON, 
 
 void rover_arm_setup(void)
 {
-  /*---WAIST_SERVO setup---*/
+    /*---WAIST_SERVO setup---*/
 #if TEST_WAIST_SERVO == 1
-  Waist.wrist_waist = 1;
-  Waist.setAngleLimits(MIN_FLOAT, MAX_FLOAT);
-  Waist.reset_encoder();
-  Waist.begin(regKp_waist, regKi_waist, regKd_waist);
+    Waist.wrist_waist = 1;
+    Waist.setAngleLimits(MIN_FLOAT, MAX_FLOAT);
+    Waist.reset_encoder();
+    Waist.begin(regKp_waist, regKi_waist, regKd_waist);
 #endif
 
-  /* ELBOW_SERVO setup */
+    /* ELBOW_SERVO setup */
 #if TEST_ELBOW_SERVO == 1
-  Elbow.setAngleLimits(0, 120);
-  Elbow.reset_encoder();
-  Elbow.begin(regKp_elbow, regKi_elbow, regKd_elbow);
+    Elbow.setAngleLimits(0, 120);
+    Elbow.reset_encoder();
+    Elbow.begin(regKp_elbow, regKi_elbow, regKd_elbow);
 #endif
 
-  /*---WRIST_ROLL_CYTRON setup---*/
+    /*---WRIST_ROLL_CYTRON setup---*/
 #if TEST_WRIST_ROLL_CYTRON == 1
-  int32_t CH2_DC = 0;
-  Wrist_Roll.wrist_waist = 1;
-  Wrist_Roll.setGearRatio(2.672222f);
-  Wrist_Roll.setGearRatio(1);
-  Wrist_Roll.setAngleLimits(MIN_FLOAT, MAX_FLOAT);
-  Wrist_Roll.reset_encoder();
-  Wrist_Roll.begin(regKp_wrist_roll, regKi_wrist_roll, regKd_wrist_roll);
+    Wrist_Roll.wrist_waist = 1;
+    Wrist_Roll.setGearRatio(2.672222f);
+    Wrist_Roll.setGearRatio(1);
+    Wrist_Roll.setAngleLimits(MIN_FLOAT, MAX_FLOAT);
+    Wrist_Roll.reset_encoder();
+    Wrist_Roll.begin(regKp_wrist_roll, regKi_wrist_roll, regKd_wrist_roll);
+#if SIMULATE_LIMIT_SWITCH == 1
+    Wrist_Roll.stop();
+    Wrist_Roll.set_zero_angle_sw();
+    Wrist_Roll.newSetpoint(0.0);
+#endif
 #endif
 
-/*---WRIST_PITCH_CYTRON setup---*/
+    /*---WRIST_PITCH_CYTRON setup---*/
 #if TEST_WRIST_PITCH_CYTRON == 1
-  Wrist_Pitch.wrist_waist = 0;
-  Wrist_Pitch.setAngleLimits(-10, 120);
-  Wrist_Pitch.reset_encoder();
-  Wrist_Pitch.begin(regKp_wrist_pitch, regKi_wrist_pitch, regKd_wrist_pitch);
+    Wrist_Pitch.wrist_waist = 0;
+    Wrist_Pitch.setAngleLimits(-10, 120);
+    Wrist_Pitch.reset_encoder();
+    Wrist_Pitch.begin(regKp_wrist_pitch, regKi_wrist_pitch, regKd_wrist_pitch);
+#if SIMULATE_LIMIT_SWITCH == 1
+    Wrist_Pitch.stop();
+    Wrist_Pitch.set_zero_angle_sw();
+    Wrist_Pitch.newSetpoint(0.0);
+#endif
 #endif
 
-  /*---END_EFFECTOR_CYTRON setup---*/
-
+    /*---END_EFFECTOR_CYTRON setup---*/
 #if TEST_END_EFFECTOR_CYTRON == 1
-  End_Effector.wrist_waist = 0;
-  End_Effector.setAngleLimits(MIN_FLOAT, MAX_FLOAT);
-  End_Effector.reset_encoder();
-  End_Effector.begin(regKp_end_effector, regKi_end_effector, regKd_end_effector);
-  End_Effector.reverse(100);
-  HAL_TIM_Base_Start_IT(&htim6);
+    End_Effector.wrist_waist = 0;
+    End_Effector.setAngleLimits(MIN_FLOAT, MAX_FLOAT);
+    End_Effector.reset_encoder();
+    End_Effector.begin(regKp_end_effector, regKi_end_effector, regKd_end_effector);
+    End_Effector.reverse(100);
 #endif
+#if SIMULATE_LIMIT_SWITCH == 1
 
-  while (!limit_set)
-    ;
+#else
+    while (!limit_set)
+        ;
+#endif
 }
-
 
 void rover_arm_loop()
 {
+    static unsigned long lastPrint = 0;     // Initialize lastPrint variable
+    unsigned long currentMillis = millis(); // get the current "time"
+
+    if (currentMillis - lastPrint >= 500)
+    { // If 500ms has passed since the last print operation
 #if TEST_ENCODER == 1
-  uint16_t encoderData_1 = 0;
-  encoderData_1 = getPositionSPI(CS1, 12);
-  Serial.printf("encoder 1 gives %d\r\n", encoderData_1);
-#endif
-
-#if TEST_WAIST_SERVO == 1
-  print_MOTOR("SP Waist", &Waist);
-#endif
-
-#if TEST_ELBOW_SERVO == 1
-  print_MOTOR("SP Elbow", &Elbow);
+        uint16_t encoderData_1 = 0;
+        encoderData_1 = getPositionSPI(CS1, 12);
+        Serial.printf("encoder 1 gives %d\r\n", encoderData_1);
 #endif
 
 #if TEST_WRIST_ROLL_CYTRON == 1
-  print_MOTOR("SP WRIST_ROLL_CYTRON", &Wrist_Roll);
+        print_motor("SP WRIST_ROLL_CYTRON", &Wrist_Roll);
 #endif
 
 #if TEST_WRIST_PITCH_CYTRON == 1
-  print_MOTOR("SP WRIST_PITCH_CYTRON", &Wrist_Pitch);
+        print_motor("SP WRIST_PITCH_CYTRON", &Wrist_Pitch);
 #endif
 
 #if TEST_END_EFFECTOR_CYTRON == 1
-  print_MOTOR("SP END_EFFECTOR_CYTRON", &End_Effector);
+        print_motor("SP END_EFFECTOR_CYTRON", &End_Effector);
 #endif
-  delay(100);
+
+#if TEST_WAIST_SERVO == 1
+        print_motor("SP Waist", &Waist);
+#endif
+
+#if TEST_ELBOW_SERVO == 1
+        print_motor("SP Elbow", &Elbow);
+#endif
+        lastPrint = currentMillis; // Update the lastPrint time
+    }
 }
 
 // void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)

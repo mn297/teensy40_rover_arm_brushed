@@ -92,7 +92,7 @@ uint16_t getPositionSPI(uint16_t encoderPin, uint8_t resolution)
   return currentPosition;
 }
 
-int getTurnCounterSPI(int16_t *returnArr, SPI_HandleTypeDef *hspi, GPIO_TypeDef *encoderPort, uint16_t encoderPin, uint8_t resolution, TIM_HandleTypeDef *timer)
+int getTurnCounterSPI(int16_t *returnArr, uint16_t encoderPin, uint8_t resolution)
 {
   uint32_t position_raw, turns_raw; // raw responses from encoder
   uint8_t binaryArray[16];          // after receiving the position and turn we will populate this array and use it for calculating the checksum
@@ -140,7 +140,6 @@ int getTurnCounterSPI(int16_t *returnArr, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
   {
     binaryArray[i] = (0x01) & (turns_raw >> (i));
   } // TODO check if this is necessary
-
   // using the equation on the datasheet we can calculate the checksums and then make sure they match what the encoder sent
   if ((binaryArray[15] == !(binaryArray[13] ^ binaryArray[11] ^ binaryArray[9] ^ binaryArray[7] ^ binaryArray[5] ^ binaryArray[3] ^ binaryArray[1])) && (binaryArray[14] == !(binaryArray[12] ^ binaryArray[10] ^ binaryArray[8] ^ binaryArray[6] ^ binaryArray[4] ^ binaryArray[2] ^ binaryArray[0])))
   {
@@ -168,10 +167,10 @@ int getTurnCounterSPI(int16_t *returnArr, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
     turns = 0xFFFF; // bad position
     return -1;
   }
-
   // populate return array
   returnArr[0] = position;
   returnArr[1] = turns;
+  return 0;
 }
 
 uint32_t get_turns_AMT22(uint16_t encoderPin, uint8_t resolution, TIM_HandleTypeDef *timer)
@@ -232,7 +231,7 @@ void setZeroSPI(SPI_HandleTypeDef *hspi, GPIO_TypeDef *encoderPort, uint16_t enc
   delay(250);
 }
 
-void resetAMT22(SPI_HandleTypeDef *hspi, GPIO_TypeDef *encoderPort, uint16_t encoderPin, TIM_HandleTypeDef *timer)
+void resetAMT22(uint16_t encoderPin)
 {
   spiWriteRead(AMT22_NOP, encoderPin, 0);
 

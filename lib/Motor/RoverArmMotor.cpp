@@ -1,5 +1,6 @@
 // #include <Arduino.h>
 #include "RoverArmMotor.h"
+#include "Teensy_PWM.h"
 #include <Arduino.h>
 #include "AMT22.h"
 #include "rover_arm.h"
@@ -8,8 +9,7 @@
 #include <inttypes.h>
 #include <cmath>
 
-// TODO: Test this class with the old code, remember to create backup beforehand!
-// I'm very suspicious of the way I handled user defined pointers...
+#define BLUE_ROBOTICS_STOP_DUTY_CYCLE 0.6f
 
 // The motor will not move until begin() is called!
 /**
@@ -24,8 +24,8 @@
  * @param  limit_switch_pin: pin for the brake or limit switch
  * @retval None
  */
-RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_type, 
-                double minimum_angle, double maximum_angle, int limit_switch_pin = -1)
+RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_type,
+                             double minimum_angle, double maximum_angle, int limit_switch_pin = -1)
 {
 
     // constructor
@@ -36,6 +36,8 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
     escType = esc_type;
     lowestAngle = minimum_angle;
     highestAngle = maximum_angle;
+
+    _pwm_freq = 400;
 
     // clean up variables
     input = 0;
@@ -49,24 +51,37 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
 
 void RoverArmMotor::begin(double regP, double regI, double regD)
 {
+    Serial.println("RoverArmMotor::begin()");
+    /*------------------Set pin modes------------------*/
+    pinMode(_pwm, OUTPUT);
+    pinMode(_dir, OUTPUT);
+    pinMode(_encoder, OUTPUT);
+    if (_limit_switch != -1)
+    {
+        pinMode(_limit_switch, INPUT_PULLUP);
+    }
+    pwmInstance = new Teensy_PWM(_pwm, _pwm_freq, 0.0f); // 400Hz equals to 2500us period
+    Serial.println("RoverArmMotor::begin() 2");
+
     /*------------------Initialize timers------------------*/
     // HAL_TIM_PWM_Start(pwm.p_tim, pwm.tim_channel);
-    delay(1000); // wait for the motor to start up
-    this->stop();    // stop the motor
-    delay(100);  // wait for the motor to start up
-    this->stop();    // stop the motor
+    delay(1000);                                         // wait for the motor to start up
+    this->stop();                                        // stop the motor
+    delay(100);                                          // wait for the motor to start up
+    this->stop();                                        // stop the motor
+    Serial.println("_pwm = " + String(_pwm));            // mn297
+    Serial.println("RoverArmMotor::begin() 3");
 
     /*------------------Initialize PID------------------*/
     if (escType == CYTRON)
     {
-        analogWriteFrequency(_pwm, 400); // 400Hz equals to 2500us period
-        analogWriteResolution(12); // For easier calculation of duty cycle
         internalPIDInstance = new PID(0.005, 99.0, -99.0, regP, regD, regI);
     }
     else if (escType == BLUE_ROBOTICS)
     {
         internalPIDInstance = new PID(0.005, 350.0, -350.0, regP, regD, regI);
     }
+    Serial.println("RoverArmMotor::begin() 4");
 
     /*------------------Get setpoint------------------*/
     // Get current location and set it as setpoint. Essential to prevent jerkiness
@@ -76,6 +91,7 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     int error = get_current_angle_sw(&currentAngle); // fix setpoint not equal to current angle
     setpoint = currentAngle;
     lastAngle = currentAngle;
+    Serial.println("RoverArmMotor::begin() 5");
 
     /*------------------Set PID parameters------------------*/
     regularKp = regP;
@@ -98,8 +114,7 @@ double real_angle = 0;
 
 // Needs to be called in each loop
 void RoverArmMotor::tick()
-{ // worry about currentAngle and setpoint
-
+{
     // this->stop(); // stop the motor
 
     /*------------------Get current angle------------------*/
@@ -161,8 +176,8 @@ void RoverArmMotor::tick()
     }
 
     //------------------SAFETY------------------//
-//    if (currentAngle >= (highestAngle - 2) || currentAngle <= (lowestAngle + 2))
-//        output = 0.0;
+    //    if (currentAngle >= (highestAngle - 2) || currentAngle <= (lowestAngle + 2))
+    //        output = 0.0;
 
     //------------------Write to motor------------------//
     if (escType == CYTRON)
@@ -181,6 +196,7 @@ void RoverArmMotor::tick()
         // Write to PWM pin
         double test_output = abs(output); // smoothing
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, (int)test_output);
+        pwmInstance->setPWM(_pwm, _pwm_freq, test_output);
     }
 
     // This one is more straightforward since we already defined the output range
@@ -203,10 +219,10 @@ void RoverArmMotor::tick()
             // }
             // else
             // {
-            //     temp_output = (output - deadband / 2);   
+            //     temp_output = (output - deadband / 2);
             // }
         }
-        volatile double output_actual = 1500 - 1 + temp_output;
+        volatile double output_actual = (1500 - 1 + temp_output) / 2500;
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, (int)output_actual);
         // uint32_t compare_actual = __// HAL_TIM_GET_COMPARE(pwm.p_tim, pwm.tim_channel);
         // printf("setpoint: %f, currentAngle: %f, lastAngle: %f ", setpoint, currentAngle, lastAngle);
@@ -225,11 +241,15 @@ int RoverArmMotor::forward(int percentage_speed)
     {
         // HAL_GPIO_WritePin(dir.port, dir.pin, GPIO_PIN_SET); // B high
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, percentage_speed);
+        digitalWrite(_dir, HIGH);
+        pwmInstance->setPWM(_pwm, _pwm_freq, percentage_speed);
         return 0;
     }
     else if (escType == BLUE_ROBOTICS)
     {
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 1499 + 350 * percentage_speed / 100);
+        double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE + (BLUE_ROBOTICS_STOP_DUTY_CYCLE * percentage_speed / 100); // TODEBUG
+        pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
         return 0;
     }
 }
@@ -244,11 +264,15 @@ int RoverArmMotor::reverse(int percentage_speed)
     {
         // HAL_GPIO_WritePin(dir.port, dir.pin, GPIO_PIN_RESET); // A high
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, percentage_speed);
+        digitalWrite(_dir, LOW);
+        pwmInstance->setPWM(_pwm, _pwm_freq, percentage_speed);
         return 0;
     }
     else if (escType == BLUE_ROBOTICS)
     {
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 1499 - 350 * percentage_speed / 100);
+        double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE - (BLUE_ROBOTICS_STOP_DUTY_CYCLE * percentage_speed / 100);
+        pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
         return 0;
     }
 }
@@ -258,11 +282,13 @@ void RoverArmMotor::stop()
     if (escType == CYTRON)
     {
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 0);
+        pwmInstance->setPWM(_pwm, _pwm_freq, 0);
         return;
     }
     else if (escType == BLUE_ROBOTICS)
     {
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 1499);
+        pwmInstance->setPWM(_pwm, _pwm_freq, BLUE_ROBOTICS_STOP_DUTY_CYCLE);
         return;
     }
 }
@@ -353,12 +379,12 @@ void RoverArmMotor::set_max_angle_sw()
 }
 
 uint32_t RoverArmMotor::get_turns_encoder()
-{ // mn297
+{
     uint32_t turns = get_turns_AMT22(_encoder, 12);
     return turns;
 }
 
-void RoverArmMotor::disengageBrake()
+void RoverArmMotor::disengageBrake() // TODO
 {
     if (_limit_switch != -1)
     {
@@ -366,7 +392,7 @@ void RoverArmMotor::disengageBrake()
     }
 }
 
-void RoverArmMotor::engageBrake()
+void RoverArmMotor::engageBrake() // TODO
 {
     if (_limit_switch != -1)
     {
@@ -385,13 +411,13 @@ void RoverArmMotor::engageBrake()
 
 double RoverArmMotor::get_current_angle()
 {                                                                                          // mn297
-    uint16_t encoderData = getPositionSPI(_encoder, 12);    // timer not used, so nullptr
+    uint16_t encoderData = getPositionSPI(_encoder, 12);                                   // timer not used, so nullptr
     currentAngle = mapFloat((float)encoderData, MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f); // mn297 potentiometer encoder
     return currentAngle;
 }
 
 int RoverArmMotor::get_current_angle_multi(double *angle)
-{ // mn297
+{
     int16_t result_arr[2];
     int error = getTurnCounterSPI(result_arr, _encoder, 12); // timer not used, so nullptr
     if (error == -1)

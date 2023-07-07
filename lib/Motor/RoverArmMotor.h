@@ -1,5 +1,6 @@
 // #include <PID_v1.h>
 #include "pid.h" // This is the file we're working on
+#include "Teensy_PWM.h"
 #include <movingAvg.h>
 #include <cstdint>
 #define SPI_HandleTypeDef void  
@@ -68,10 +69,13 @@ private:
 public: // TESTING only
     // Default to open loop, will need to enter the coefficients to begin
     PID *internalPIDInstance;
+    Teensy_PWM *pwmInstance;
 
     double regularKp, regularKi, regularKd;
     // PINS
     int _pwm, _dir, _encoder, _limit_switch;
+
+    int _pwm_freq;
 
     int movingAverageWindowSize;
     double lowestAngle, highestAngle;
