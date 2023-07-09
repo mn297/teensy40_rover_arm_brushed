@@ -6,6 +6,8 @@
 #include "AMT22.h"
 #include <limits>
 #include <IntervalTimer.h>
+#include "TeensyDebug.h"
+#pragma GCC optimize("O0")
 IntervalTimer rover_arm_timer;
 
 // No additional #include statements are needed
@@ -49,7 +51,9 @@ void setup()
   Serial.begin(115200);
   while (!Serial)
     ;
+  debug.begin(SerialUSB1);
 
+  halt_cpu();                    // stop on startup; if not, Teensy keeps running and you
   SPI.begin(); // initiate SPI bus
 
   Serial.println("Starting up");

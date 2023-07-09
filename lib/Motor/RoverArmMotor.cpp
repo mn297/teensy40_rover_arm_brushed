@@ -297,7 +297,7 @@ int RoverArmMotor::reverse(int percentage_speed)
         double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE - (BLUE_ROBOTICS_STOP_DUTY_CYCLE * percentage_speed / 100);
         pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
         return 0;
-    }
+    }   
     return -1;
 }
 
