@@ -65,11 +65,11 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
 
     /*------------------Initialize timers------------------*/
     // HAL_TIM_PWM_Start(pwm.p_tim, pwm.tim_channel);
-    delay(1000);                                         // wait for the motor to start up
-    this->stop();                                        // stop the motor
-    delay(100);                                          // wait for the motor to start up
-    this->stop();                                        // stop the motor
-    Serial.println("_pwm = " + String(_pwm));            // mn297
+    delay(1000);                              // wait for the motor to start up
+    this->stop();                             // stop the motor
+    delay(100);                               // wait for the motor to start up
+    this->stop();                             // stop the motor
+    Serial.println("_pwm = " + String(_pwm)); // mn297
     Serial.println("RoverArmMotor::begin() 3");
 
     /*------------------Initialize PID------------------*/
@@ -88,7 +88,14 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     // as the microcontroller initializes.
     // adcResult = internalAveragerInstance.reading(analogRead(encoder));
     // after setup, currentAngle is same as setpoint
+    delay(100);                                      // safety
     int error = get_current_angle_sw(&currentAngle); // fix setpoint not equal to current angle
+    if (error == -1)
+    {
+        printf("ERROR: get_current_angle_sw() returned -1 from begin()\r\n");
+        return;
+    }
+    Serial.println("Motor current angle: " + String(currentAngle));
     setpoint = currentAngle;
     lastAngle = currentAngle;
     Serial.println("RoverArmMotor::begin() 5");
@@ -101,12 +108,17 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     // if(brake)  engageBrake(); //use brake if there is one
     if (_limit_switch != -1)
         engageBrake(); // use brake if there is one
+    Serial.println("RoverArmMotor::begin() 6");
 
     /*------------------Reverse to hit zero angle------------------*/
     delay(1000); // wait for the motor to start up
     this->reverse();
+    Serial.println("RoverArmMotor::begin() 7");
     delay(500); // wait for the motor to start up
     this->reverse();
+    Serial.println("RoverArmMotor::begin() 8");
+    return;
+    Serial.println("RoverArmMotor::begin() 8");
 }
 
 int positive_rezeros = 0;
@@ -129,7 +141,8 @@ void RoverArmMotor::tick()
 
     //------------------remove jitter------------------//
     // If the change in angle is less than the threshold, return early
-    if (abs(currentAngle - setpoint) < 0.5)
+    double diff = min(abs(currentAngle - setpoint), 360.0 - abs(currentAngle - setpoint));
+    if (diff < 0.5)
     {
         output = 0;
         this->stop(); // stop the motor
@@ -147,26 +160,32 @@ void RoverArmMotor::tick()
     {
         forwardDistance = (setpoint > input) ? setpoint - input : (360 - input) + setpoint;
         backwardDistance = (setpoint > input) ? (360 - setpoint) + input : input - setpoint;
+        // GO BACKWARDS CW
         if (backwardDistance < forwardDistance - 1.0) // handle hysterisis
         {
             if (setpoint > input)
             {
                 output = internalPIDInstance->calculate(setpoint, input + 360); // buff it 360 to go backwards
+                Serial.printf("Case 1, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
             }
             else
             {
                 output = internalPIDInstance->calculate(setpoint, input); // wrapped around so bigger so no need buff 360
+                Serial.printf("Case 2, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
             }
         }
+        // GO FORWARDS CCW
         else
         {
             if (setpoint > input)
             {
                 output = internalPIDInstance->calculate(setpoint, input); //  wrapped around so bigger so no need nerf 360
+                Serial.printf("Case 3, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
             }
             else
             {
                 output = internalPIDInstance->calculate(setpoint, input - 360); // nerf it 360 to go forwards
+                Serial.printf("Case 4, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
             }
         }
     }
@@ -197,6 +216,7 @@ void RoverArmMotor::tick()
         double test_output = abs(output); // smoothing
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, (int)test_output);
         pwmInstance->setPWM(_pwm, _pwm_freq, test_output);
+        return;
     }
 
     // This one is more straightforward since we already defined the output range
@@ -228,7 +248,9 @@ void RoverArmMotor::tick()
         // printf("setpoint: %f, currentAngle: %f, lastAngle: %f ", setpoint, currentAngle, lastAngle);
         // printf("output_actual: %f, compare: ", output_actual);
         // printf("%" PRIu32 "\r\n", compare_actual);
+        return;
     }
+    return;
 }
 
 int RoverArmMotor::forward(int percentage_speed)
@@ -252,6 +274,7 @@ int RoverArmMotor::forward(int percentage_speed)
         pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
         return 0;
     }
+    return -1;
 }
 
 int RoverArmMotor::reverse(int percentage_speed)
@@ -275,6 +298,7 @@ int RoverArmMotor::reverse(int percentage_speed)
         pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
         return 0;
     }
+    return -1;
 }
 
 void RoverArmMotor::stop()
@@ -291,6 +315,7 @@ void RoverArmMotor::stop()
         pwmInstance->setPWM(_pwm, _pwm_freq, BLUE_ROBOTICS_STOP_DUTY_CYCLE);
         return;
     }
+    return;
 }
 
 // Useless at the moment.
@@ -299,6 +324,7 @@ void RoverArmMotor::set_PID_params(double regP, double regI, double regD)
     regularKp = regP;
     regularKi = regI;
     regularKd = regD;
+    return;
 }
 
 bool RoverArmMotor::setMultiplierBool(bool mult, double ratio)
@@ -348,12 +374,14 @@ int RoverArmMotor::getDirection()
 void RoverArmMotor::setGearRatio(double ratio)
 {
     gearRatio = ratio;
+    return;
 }
 
 void RoverArmMotor::setAngleLimits(double lowest, double highest)
 {
     lowestAngle = lowest * gearRatio;
     highestAngle = highest * gearRatio;
+    return;
 }
 
 void RoverArmMotor::set_zero_angle()
@@ -364,11 +392,13 @@ void RoverArmMotor::set_zero_angle()
 void RoverArmMotor::reset_encoder()
 {
     resetAMT22(_encoder); // timer not used, so nullptr
+    return;
 }
 
 void RoverArmMotor::set_zero_angle_sw()
 {
     this->get_current_angle_multi(&zero_angle_sw);
+    return;
 }
 
 void RoverArmMotor::set_max_angle_sw()
@@ -459,7 +489,6 @@ int RoverArmMotor::get_current_angle_sw(double *angle)
     {
         *angle = diff;
     }
-
     return 0; // return 0 on success
 }
 

@@ -23,11 +23,12 @@
 #ifndef _PID_SOURCE_
 #define _PID_SOURCE_
 
-#define PID_DEBUG 0
+#define PID_DEBUG 1
 
 #include <iostream>
 #include <cmath>
 #include "pid.h"
+#include <Arduino.h>
 
 using namespace std;
 
@@ -90,13 +91,17 @@ double PIDImpl::calculate(double setpoint, double pv)
     double Iout = _Ki * _integral;
 
     // Derivative term
-    double derivative = (error - _pre_error) / _dt;
-    double Dout = _Kd * derivative;
+    // double derivative = (error - _pre_error) / _dt;
+    // double Dout = _Kd * derivative;
+
+    // mn297 fixed derivative term
+    double derivative = error / _dt;
+    double Dout = _Kd * derivative / 100;
 
     // Calculate total output
     double output = Pout + Iout + Dout;
 #if PID_DEBUG == 1
-    printf("Pout: %f, Iout: %f, Dout: %f\r\n", Pout, Iout, Dout);
+    printf("Pout: %f, Iout: %f, Dout: %f, _pre_error: %f\r\n", Pout, Iout, Dout, _pre_error);
 #endif
     // Restrict to max/min
     if (output > _max)
@@ -106,7 +111,7 @@ double PIDImpl::calculate(double setpoint, double pv)
 
     // Save error to previous error
     _pre_error = error;
-
+    Serial.printf("output: %f\r\n", output);
     return output;
 }
 

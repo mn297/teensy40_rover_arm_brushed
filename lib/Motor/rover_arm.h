@@ -36,9 +36,9 @@
 #define AMT22_TIM htim15
 
 // WRIST_ROLL_TESTBENCH (DC)
-#define REG_KP_WRIST_ROLL 0.6
-#define REG_KI_WRIST_ROLL 0.3
-#define REG_KD_WRIST_ROLL 0.3
+#define REG_KP_WRIST_ROLL 0.8
+#define REG_KI_WRIST_ROLL 0.1
+#define REG_KD_WRIST_ROLL 0.1
 
 // WRIST_PITCH_CYTRON
 #define REG_KP_WRIST_PITCH 0.5
@@ -72,7 +72,7 @@
 #define REG_KI_END_EFFECTOR 0.0
 #define REG_KD_END_EFFECTOR 0.0
 
-
+void print_motor(char *msg, void *pMotor);
 void rover_arm_setup(void);
 void rover_arm_loop(void);
 

@@ -53,16 +53,17 @@ uint32_t rx_index = 0;
 char command_buffer[20];
 double param1, param2, param3;
 
-static void print_motor(char *msg, RoverArmMotor *pMotor)
+void print_motor(char *msg, void *pMotor)
 {
+
     double current_angle_multi;
     double current_angle_sw;
-    pMotor->get_current_angle_sw(&current_angle_sw);
+    ((RoverArmMotor*)pMotor)->get_current_angle_sw(&current_angle_sw);
     printf("%s setpoint %.2f, angle_sw %.2f, output %.2f\r\n",
            msg,
-           pMotor->setpoint / pMotor->gearRatio,
-           current_angle_sw / pMotor->gearRatio,
-           pMotor->output);
+           ((RoverArmMotor*)pMotor)->setpoint / ((RoverArmMotor*)pMotor)->gearRatio,
+           current_angle_sw / ((RoverArmMotor*)pMotor)->gearRatio,
+           ((RoverArmMotor*)pMotor)->output);
 }
 
 /*---------------------WRIST_ROLL_CYTRON---------------------*/
@@ -72,7 +73,7 @@ RoverArmMotor Wrist_Roll(PWM1, DIR1, CS1, CYTRON, 0, 359.99f);
 
 /*---------------------WRIST_PITCH_CYTRON---------------------*/
 #if TEST_WRIST_PITCH_CYTRON == 1
-RoverArmMotor Wrist_Pitch(PWM2, DIR2, AMT22_2, CYTRON, 0, 359.99f);
+RoverArmMotor Wrist_Pitch(PWM2, DIR2, CS2, CYTRON, 0, 359.99f);
 #endif
 
 /*---------------------WAIST_SERVO DECLARATIONS---------------------*/
@@ -114,7 +115,7 @@ void rover_arm_setup(void)
     Wrist_Roll.setGearRatio(1);
     Wrist_Roll.setAngleLimits(MIN_FLOAT, MAX_FLOAT);
     Wrist_Roll.reset_encoder();
-    Wrist_Roll.begin(regKp_wrist_roll, regKi_wrist_roll, regKd_wrist_roll);
+    Wrist_Roll.begin(REG_KP_WRIST_ROLL, REG_KI_WRIST_ROLL, REG_KD_WRIST_ROLL);
 #if SIMULATE_LIMIT_SWITCH == 1
     Wrist_Roll.stop();
     Wrist_Roll.set_zero_angle_sw();
@@ -125,7 +126,7 @@ void rover_arm_setup(void)
     /*---WRIST_PITCH_CYTRON setup---*/
 #if TEST_WRIST_PITCH_CYTRON == 1
     Wrist_Pitch.wrist_waist = 0;
-    Wrist_Pitch.setAngleLimits(-10, 120);
+    Wrist_Pitch.setAngleLimits(MIN_FLOAT, MAX_FLOAT);   // TODO: set limits
     Wrist_Pitch.reset_encoder();
     Wrist_Pitch.begin(regKp_wrist_pitch, regKi_wrist_pitch, regKd_wrist_pitch);
 #if SIMULATE_LIMIT_SWITCH == 1
@@ -156,7 +157,7 @@ void rover_arm_loop()
     static unsigned long lastPrint = 0;     // Initialize lastPrint variable
     unsigned long currentMillis = millis(); // get the current "time"
 
-    if (currentMillis - lastPrint >= 500)
+    if (currentMillis - lastPrint >= 100)
     { // If 500ms has passed since the last print operation
 #if TEST_ENCODER == 1
         uint16_t encoderData_1 = 0;
