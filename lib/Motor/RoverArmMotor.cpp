@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <cmath>
+#include "rover_arm.h"
 
 #define BLUE_ROBOTICS_STOP_DUTY_CYCLE 0.6f
 
@@ -47,6 +48,11 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
     zero_angle_sw = 0; // default no offset
     gearRatio = 1.0;   // default no multiplier
     wrist_waist = false;
+
+    encoder_error = 0;
+
+    _limit_pin_max = -1;
+    _limit_pin_min = -1;
 }
 
 void RoverArmMotor::begin(double regP, double regI, double regD)
@@ -65,7 +71,7 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
 
     /*------------------Initialize timers------------------*/
     // HAL_TIM_PWM_Start(pwm.p_tim, pwm.tim_channel);
-    delay(1000);                              // wait for the motor to start up
+    delay(500);                               // wait for the motor to start up
     this->stop();                             // stop the motor
     delay(100);                               // wait for the motor to start up
     this->stop();                             // stop the motor
@@ -92,6 +98,7 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     int error = get_current_angle_sw(&currentAngle); // fix setpoint not equal to current angle
     if (error == -1)
     {
+        encoder_error = 1;
         printf("ERROR: get_current_angle_sw() returned -1 from begin()\r\n");
         return;
     }
@@ -111,7 +118,7 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     Serial.println("RoverArmMotor::begin() 6");
 
     /*------------------Reverse to hit zero angle------------------*/
-    delay(1000); // wait for the motor to start up
+    delay(500); // wait for the motor to start up
     this->reverse();
     Serial.println("RoverArmMotor::begin() 7");
     delay(500); // wait for the motor to start up
@@ -127,23 +134,68 @@ double real_angle = 0;
 // Needs to be called in each loop
 void RoverArmMotor::tick()
 {
-    // this->stop(); // stop the motor
+// this->stop(); // stop the motor
+/*------------------Check limit pins------------------*/
+// Print limit pins status
+#if DEBUG_ROVER_ARM_MOTOR
+    Serial.println("limit_pin_max = " + String(_limit_pin_max));
+    Serial.println("limit_pin_min = " + String(_limit_pin_min));
+    Serial.printf("RoverArmMotor::tick() limit_pin_max = %d\r\n", digitalRead(_limit_pin_max));
+    Serial.printf("RoverArmMotor::tick() limit_pin_min = %d\r\n", digitalRead(_limit_pin_min));
+#endif
+    if (_limit_pin_max != -1 && _limit_pin_min != -1)
+    {
+        if (digitalRead(_limit_pin_max) == LOW)
+        {
+            this->stop();
+#if DEBUG_ROVER_ARM_MOTOR
+            Serial.println("RoverArmMotor::tick() _limit_pin_max");
+#endif
+            return;
+        }
+        if (digitalRead(_limit_pin_min) == LOW)
+        {
+            this->stop();
+#if DEBUG_ROVER_ARM_MOTOR
+            Serial.println("RoverArmMotor::tick() _limit_pin_min");
+#endif
+            return;
+        }
+    }
 
     /*------------------Get current angle------------------*/
     int error = get_current_angle_sw(&currentAngle);
     if (error == -1)
     {
+        encoder_error = 1;
         output = 0;
         this->stop(); // stop the motor
+#if DEBUG_ROVER_ARM_MOTOR == 1
         printf("ERROR: get_current_angle_sw() returned -1 from tick()\r\n");
+#endif
         return;
+    }
+    else
+    {
+        encoder_error = 0;
     }
 
     //------------------remove jitter------------------//
     // If the change in angle is less than the threshold, return early
-    double diff = min(abs(currentAngle - setpoint), 360.0 - abs(currentAngle - setpoint));
+    double diff;
+    if (wrist_waist)
+    {
+        diff = min(abs(currentAngle - setpoint), 360.0 - abs(currentAngle - setpoint));
+    }
+    else
+    {
+        diff = abs(currentAngle - setpoint);
+    }
     if (diff < 0.5)
     {
+#if DEBUG_ROVER_ARM_MOTOR == 1
+        Serial.println("RoverArmMotor::tick() diff < 0.5");
+#endif
         output = 0;
         this->stop(); // stop the motor
         return;
@@ -155,7 +207,6 @@ void RoverArmMotor::tick()
     //------------------Compute PID------------------//
     // Compute distance, retune PID if necessary. Less aggressive tuning params for small errors
     // Find the shortest from the current position to the set point
-
     if (wrist_waist)
     {
         forwardDistance = (setpoint > input) ? setpoint - input : (360 - input) + setpoint;
@@ -297,7 +348,7 @@ int RoverArmMotor::reverse(int percentage_speed)
         double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE - (BLUE_ROBOTICS_STOP_DUTY_CYCLE * percentage_speed / 100);
         pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
         return 0;
-    }   
+    }
     return -1;
 }
 
@@ -306,6 +357,9 @@ void RoverArmMotor::stop()
     if (escType == CYTRON)
     {
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 0);
+#if DEBUG_ROVER_ARM_MOTOR == 1
+        Serial.println("RoverArmMotor::stop() CYTRON");
+#endif
         pwmInstance->setPWM(_pwm, _pwm_freq, 0);
         return;
     }
@@ -395,13 +449,13 @@ void RoverArmMotor::reset_encoder()
     return;
 }
 
-void RoverArmMotor::set_zero_angle_sw()
+void RoverArmMotor::set_current_as_zero_angle_sw()
 {
     this->get_current_angle_multi(&zero_angle_sw);
     return;
 }
 
-void RoverArmMotor::set_max_angle_sw()
+void RoverArmMotor::set_current_as_max_angle_sw()
 {
     double temp = 0;
     this->get_current_angle_multi(&temp);
@@ -452,7 +506,9 @@ int RoverArmMotor::get_current_angle_multi(double *angle)
     int error = getTurnCounterSPI(result_arr, _encoder, 12); // timer not used, so nullptr
     if (error == -1)
     {
+#if DEBUG_ROVER_ARM_MOTOR == 1
         printf("ERROR: getTurnCounterSPI() returned -1 from get_current_angle_multi()\r\n");
+#endif
         return -1;
     }
 
@@ -469,7 +525,10 @@ int RoverArmMotor::get_current_angle_sw(double *angle)
     int error = get_current_angle_multi(&current_angle_multi);
     if (error == -1)
     {
+        encoder_error = 1;
+#if DEBUG_ROVER_ARM_MOTOR == 1
         printf("ERROR: get_current_angle_multi() returned -1 from get_current_angle_sw()\r\n");
+#endif
         return -1;
     }
 
@@ -521,4 +580,12 @@ void RoverArmMotor::WatchdogISR()
     // Get current angle
 
     // Set setpoint to that angle
+}
+
+void RoverArmMotor::set_limit_pins(int limit_pin_max, int limit_pin_min)
+{
+    _limit_pin_max = limit_pin_max;
+    _limit_pin_min = limit_pin_min;
+    pinMode(_limit_pin_max, INPUT_PULLUP);
+    pinMode(_limit_pin_min, INPUT_PULLUP);
 }

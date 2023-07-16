@@ -23,12 +23,11 @@
 #ifndef _PID_SOURCE_
 #define _PID_SOURCE_
 
-#define PID_DEBUG 1
-
 #include <iostream>
 #include <cmath>
 #include "pid.h"
 #include <Arduino.h>
+#include "rover_arm.h"
 
 using namespace std;
 
@@ -94,14 +93,18 @@ double PIDImpl::calculate(double setpoint, double pv)
     // double derivative = (error - _pre_error) / _dt;
     // double Dout = _Kd * derivative;
 
-    // mn297 fixed derivative term
+    // mn297 fixed derivative term 1 
+    // double derivative = (abs(error) - abs(_pre_error)) / _dt;
+    // double Dout = _Kd * derivative;
+
+    // mn297 fixed derivative term 2
     double derivative = error / _dt;
     double Dout = _Kd * derivative / 100;
 
     // Calculate total output
     double output = Pout + Iout + Dout;
-#if PID_DEBUG == 1
-    printf("Pout: %f, Iout: %f, Dout: %f, _pre_error: %f\r\n", Pout, Iout, Dout, _pre_error);
+#if DEBUG_PID == 1
+    printf("Pout: %f, Iout: %f, Dout: %f, error: %f, _pre_error: %f\r\n", Pout, Iout, Dout, error, _pre_error);
 #endif
     // Restrict to max/min
     if (output > _max)

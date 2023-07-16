@@ -3,7 +3,7 @@
 #include "Teensy_PWM.h"
 #include <movingAvg.h>
 #include <cstdint>
-#define SPI_HandleTypeDef void  
+#define SPI_HandleTypeDef void
 #define GPIO_TypeDef void
 #define GPIO_PinState int
 #define TIM_HandleTypeDef void
@@ -22,8 +22,8 @@ public:
 #define MAX_ADC_VALUE 4095 // 3850
 #define MIN_ADC_VALUE 0    // 200
 
-    RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_type, 
-                double minimum_angle, double maximum_angle, int limit_switch_pin = -1);
+    RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_type,
+                  double minimum_angle, double maximum_angle, int limit_switch_pin = -1);
 
     // Setters for various tunable parameters of our motors
     void set_PID_params(double regP, double regI, double regD); // mn297
@@ -33,7 +33,8 @@ public:
     void setRetuningGapLimit(int gap);
     void setAngleLimits(double lowest_angle, double highest_angle);
     void set_zero_angle();    // unused
-    void set_zero_angle_sw(); // mn297 software zero angle
+    void set_current_as_zero_angle_sw(); // mn297 software zero angle
+    void set_current_as_max_angle_sw(); // mn297 software zero angle
     void set_max_angle_sw();
 
     uint32_t get_turns_encoder(); // mn297
@@ -64,6 +65,7 @@ public:
     void stop();
     void setGearRatio(double ratio);
     int get_turn_count(); // mn297
+    void set_limit_pins(int limit_pin_max, int limit_pin_min);
 
 private:
 public: // TESTING only
@@ -74,6 +76,8 @@ public: // TESTING only
     double regularKp, regularKi, regularKd;
     // PINS
     int _pwm, _dir, _encoder, _limit_switch;
+    int _limit_pin_max;
+    int _limit_pin_min;
 
     int _pwm_freq;
 
@@ -96,6 +100,8 @@ public: // TESTING only
     int servo_dir;        // mn297
     double forwardDistance;
     double backwardDistance;
+
+    int encoder_error;
 
     enum ActuationStates
     {

@@ -7,14 +7,15 @@
 #include <limits>
 #include <IntervalTimer.h>
 #include "TeensyDebug.h"
-#pragma GCC optimize("O0")
+
+#if DEBUG_GDB_STUB == 1
+// #pragma GCC optimize("O0")
+#endif
+
 IntervalTimer rover_arm_timer;
 
 // No additional #include statements are needed
-Teensy_PWM *PWM1_instance;
-Teensy_PWM *PWM2_instance;
-Teensy_PWM *PWM3_instance;
-#define WRIST_ROLL_TESTBENCH 0
+#define TICK 1
 
 #define MIN_FLOAT -std::numeric_limits<float>::infinity()
 #define MAX_FLOAT std::numeric_limits<float>::infinity()
@@ -26,22 +27,14 @@ uint32_t sp_counter = 0;
 
 void rover_arm_timer_routine()
 {
-#if WRIST_ROLL_TESTBENCH == 1
-  int16_t turnCounter[2] = {0, 0};
-  getTurnCounterSPI(turnCounter, CS1, 12);
-  Serial.printf("encoder 1 gives %d %d\r\n", turnCounter[0], turnCounter[1]);
-  digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-
-  double current_angle_sw = 0;
-  Wrist_Roll.get_current_angle_sw(&current_angle_sw);
-  Serial.printf("Wrist_Roll setpoint %.2f, angle_sw %.2f, output %.2f\r\n",
-                Wrist_Roll.setpoint / Wrist_Roll.gearRatio,
-                current_angle_sw / Wrist_Roll.gearRatio,
-                Wrist_Roll.output);
-#else
+#if TICK == 1
+#if TEST_WRIST_ROLL_CYTRON == 1
   Wrist_Roll.tick();
+#endif
 #if TEST_WRIST_PITCH_CYTRON == 1
   Wrist_Pitch.tick();
+#else
+
 #endif
 #endif
 }
@@ -51,13 +44,13 @@ void setup()
   Serial.begin(115200);
   while (!Serial)
     ;
+#if DEBUG_GDB_STUB == 1
   debug.begin(SerialUSB1);
-
-  halt_cpu();                    // stop on startup; if not, Teensy keeps running and you
-  SPI.begin(); // initiate SPI bus
+  halt_cpu(); // stop on startup; if not, Teensy keeps running and you
+#endif
 
   Serial.println("Starting up");
-
+  SPI.begin(); // initiate SPI bus
   rover_arm_setup();
   delay(500);
   rover_arm_timer.begin(rover_arm_timer_routine, 50000); // blinkLED will be called every 100ms
@@ -67,21 +60,11 @@ void setup()
 // the loop function runs over and over again forever
 void loop()
 {
-#if WRIST_ROLL_TESTBENCH == 1
-  Wrist_Roll.forward();
-  print_motor("Wrist_Roll", &Wrist_Roll);
-  // Wrist_Pitch.forward();
-  delay(2500);
-  Wrist_Roll.reverse();
-  // Wrist_Pitch.reverse();
-  delay(1000);
-#else
   rover_arm_loop();
-#endif
 }
+
 void serialEvent()
 {
-
   while (Serial.available())
   {
     // Read the incoming string
@@ -105,7 +88,8 @@ void serialEvent()
 #if TEST_WRIST_PITCH_CYTRON == 1
     bool result2 = Wrist_Pitch.newSetpoint(param1);
 #endif
-    // Print status each one
+
+    // Print status.
 #if TEST_WRIST_ROLL_CYTRON == 1
     Serial.printf("Wrist_Roll newSetpoint at %lf result: %d\r\n", param1, result1);
 #endif
