@@ -26,21 +26,19 @@
  * @retval None
  */
 RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_type,
-                             double minimum_angle, double maximum_angle, int limit_switch_pin = -1)
+                             double minimum_angle, double maximum_angle, int limit_pin_max = -1, int limit_pin_min = -1)
 {
-
-    // constructor
     _pwm = pwm_pin;
     _dir = dir_pin;
     _encoder = encoder_pin;
-    _limit_switch = limit_switch_pin;
+
     escType = esc_type;
     lowestAngle = minimum_angle;
     highestAngle = maximum_angle;
 
     _pwm_freq = 400;
 
-    // clean up variables
+    // Zero-initialize all variables
     input = 0;
     output = 0;
     lastAngle = 0;
@@ -51,8 +49,8 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
 
     encoder_error = 0;
 
-    _limit_pin_max = -1;
-    _limit_pin_min = -1;
+    _limit_pin_max = limit_pin_max;
+    _limit_pin_min = limit_pin_min;
 }
 
 void RoverArmMotor::begin(double regP, double regI, double regD)
@@ -62,15 +60,17 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     pinMode(_pwm, OUTPUT);
     pinMode(_dir, OUTPUT);
     pinMode(_encoder, OUTPUT);
-    if (_limit_switch != -1)
+    if (_limit_pin_max != -1 && _limit_pin_min != -1)
     {
-        pinMode(_limit_switch, INPUT_PULLUP);
+        pinMode(_limit_pin_max, INPUT_PULLUP);
+        pinMode(_limit_pin_min, INPUT_PULLUP);
     }
+
+    /*------------------Initialize PWM------------------*/
     pwmInstance = new Teensy_PWM(_pwm, _pwm_freq, 0.0f); // 400Hz equals to 2500us period
     Serial.println("RoverArmMotor::begin() 2");
 
     /*------------------Initialize timers------------------*/
-    // HAL_TIM_PWM_Start(pwm.p_tim, pwm.tim_channel);
     delay(500);                               // wait for the motor to start up
     this->stop();                             // stop the motor
     delay(100);                               // wait for the motor to start up
@@ -252,33 +252,34 @@ void RoverArmMotor::tick()
     //------------------Write to motor------------------//
     if (escType == CYTRON)
     {
+        //------------------DEADBAND------------------//
+        double temp_output = abs(output);
+        if (temp_output <= DEADBAND_CYTRON)
+        {
+            temp_output = 0;
+        }
         // Interpret sign of the error signal as the direction pin value
         if (output > 0)
         {
-            // HAL_GPIO_WritePin(dir.port, dir.pin, GPIO_PIN_SET); // B high
+            // B high.
             digitalWrite(_dir, HIGH);
         }
         else
         {
-            // HAL_GPIO_WritePin(dir.port, dir.pin, GPIO_PIN_RESET); // A high
+            // A high.
             digitalWrite(_dir, LOW);
         }
         // Write to PWM pin
-        double test_output = abs(output); // smoothing
-        // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, (int)test_output);
-        pwmInstance->setPWM(_pwm, _pwm_freq, test_output);
+        pwmInstance->setPWM(_pwm, _pwm_freq, temp_output);
         return;
     }
 
-    // This one is more straightforward since we already defined the output range
-    // from 1100us to 1900us
+    // Output range from 1100-1900 us of a 2500 us period
     else if (escType == BLUE_ROBOTICS)
     {
-
         //------------------DEADBAND------------------//
-        volatile double temp_output = output;
-        int deadband = 10;
-        if (abs(output) <= deadband)
+        double temp_output = abs(output);
+        if (temp_output <= DEADBAND_SERVO)
         {
             temp_output = 0;
         }
@@ -294,11 +295,7 @@ void RoverArmMotor::tick()
             // }
         }
         volatile double output_actual = (1500 - 1 + temp_output) / 2500;
-        // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, (int)output_actual);
-        // uint32_t compare_actual = __// HAL_TIM_GET_COMPARE(pwm.p_tim, pwm.tim_channel);
-        // printf("setpoint: %f, currentAngle: %f, lastAngle: %f ", setpoint, currentAngle, lastAngle);
-        // printf("output_actual: %f, compare: ", output_actual);
-        // printf("%" PRIu32 "\r\n", compare_actual);
+        pwmInstance->setPWM(_pwm, _pwm_freq, output_actual);
         return;
     }
     return;
@@ -312,8 +309,7 @@ int RoverArmMotor::forward(int percentage_speed)
     }
     if (escType == CYTRON)
     {
-        // HAL_GPIO_WritePin(dir.port, dir.pin, GPIO_PIN_SET); // B high
-        // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, percentage_speed);
+        // B high.
         digitalWrite(_dir, HIGH);
         pwmInstance->setPWM(_pwm, _pwm_freq, percentage_speed);
         return 0;
@@ -336,8 +332,7 @@ int RoverArmMotor::reverse(int percentage_speed)
     }
     if (escType == CYTRON)
     {
-        // HAL_GPIO_WritePin(dir.port, dir.pin, GPIO_PIN_RESET); // A high
-        // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, percentage_speed);
+        // A high.
         digitalWrite(_dir, LOW);
         pwmInstance->setPWM(_pwm, _pwm_freq, percentage_speed);
         return 0;
@@ -399,6 +394,7 @@ double RoverArmMotor::getSetpoint()
 
 bool RoverArmMotor::newSetpoint(double angle)
 {
+    Serial.printf("RoverArmMotor::newSetpoint() angle = %f\r\n", angle);
     double setpoint_test = angle * gearRatio;
     if (wrist_waist)
     {

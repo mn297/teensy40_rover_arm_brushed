@@ -40,7 +40,11 @@
 #define DEBUG_GDB_STUB 0
 #define DEBUG_PID 0
 #define DEBUG_ROVER_ARM_MOTOR 0
-#define DEBUG_PRINT_MOTOR 0
+#define DEBUG_PRINT_MOTOR 1
+
+// DEADBAND SETTINGS------------------------------------------------------------
+#define DEADBAND_CYTRON 0.8f
+#define DEADBAND_SERVO 10.0f
 
 // MOTOR SETTINGS---------------------------------------------------------------
 #define TEST_WRIST_ROLL_CYTRON 0

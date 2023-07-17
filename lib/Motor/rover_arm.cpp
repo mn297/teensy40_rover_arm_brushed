@@ -59,7 +59,7 @@ RoverArmMotor Wrist_Roll(PWM1, DIR1, CS1, CYTRON, 0, 359.99f);
 
 /*---------------------WRIST_PITCH_CYTRON---------------------*/
 #if TEST_WRIST_PITCH_CYTRON == 1
-RoverArmMotor Wrist_Pitch(PWM2, DIR2, CS2, CYTRON, 0, 359.99f);
+RoverArmMotor Wrist_Pitch(PWM2, DIR2, CS2, CYTRON, 0, 359.99f, LIMIT_WRIST_PITCH_MAX, LIMIT_WRIST_PITCH_MIN);
 #endif
 
 /*---------------------END_EFFECTOR_CYTRON---------------------*/
@@ -106,7 +106,6 @@ void rover_arm_setup(void)
     Wrist_Pitch.wrist_waist = 0;
     Wrist_Pitch.setGearRatio(WRIST_PITCH_GEAR_RATIO);
     Wrist_Pitch.setAngleLimits(WRIST_PITCH_MIN_ANGLE, WRIST_PITCH_MAX_ANGLE);
-    Wrist_Pitch.set_limit_pins(LIMIT_WRIST_PITCH_MAX, LIMIT_WRIST_PITCH_MIN);
     Wrist_Pitch.reset_encoder();
     Wrist_Pitch.begin(REG_KP_WRIST_PITCH, REG_KI_WRIST_PITCH, REG_KD_WRIST_PITCH);
 #if SIMULATE_LIMIT_SWITCH == 1

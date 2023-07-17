@@ -23,7 +23,7 @@ public:
 #define MIN_ADC_VALUE 0    // 200
 
     RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_type,
-                  double minimum_angle, double maximum_angle, int limit_switch_pin = -1);
+                  double minimum_angle, double maximum_angle, int limit_pin_max = -1, int limit_pin_min = -1);
 
     // Setters for various tunable parameters of our motors
     void set_PID_params(double regP, double regI, double regD); // mn297
@@ -32,9 +32,9 @@ public:
     void setRegularCoefficients(double P, double I, double D);
     void setRetuningGapLimit(int gap);
     void setAngleLimits(double lowest_angle, double highest_angle);
-    void set_zero_angle();    // unused
+    void set_zero_angle();               // unused
     void set_current_as_zero_angle_sw(); // mn297 software zero angle
-    void set_current_as_max_angle_sw(); // mn297 software zero angle
+    void set_current_as_max_angle_sw();  // mn297 software zero angle
     void set_max_angle_sw();
 
     uint32_t get_turns_encoder(); // mn297
