@@ -114,7 +114,9 @@ double PIDImpl::calculate(double setpoint, double pv)
 
     // Save error to previous error
     _pre_error = error;
+#if DEBUG_PID == 1
     Serial.printf("output: %f\r\n", output);
+#endif
     return output;
 }
 

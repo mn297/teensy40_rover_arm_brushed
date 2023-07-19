@@ -56,14 +56,14 @@ public:
     double getCurrentOutput();
     int getDirection();
     double getRatio();
-    // void setGearRatio(double ratio);
+    // void set_gear_ratio(double ratio);
 
     void begin(double regP, double regI, double regD);
     void tick();
     int forward(int percentage_speed = 25);
     int reverse(int percentage_speed = 25);
     void stop();
-    void setGearRatio(double ratio);
+    void set_gear_ratio(double ratio);
     int get_turn_count(); // mn297
     void set_limit_pins(int limit_pin_max, int limit_pin_min);
 
@@ -92,7 +92,7 @@ public: // TESTING only
     volatile double output;
     volatile double setpoint;
     int actuationState;
-    double gearRatio;
+    double gear_ratio;
 
     int useSwAngle;       // mn297
     double zero_angle_sw; // mn297
@@ -100,6 +100,7 @@ public: // TESTING only
     int servo_dir;        // mn297
     double forwardDistance;
     double backwardDistance;
+    double angle_full_turn;
 
     int encoder_error;
 

@@ -36,9 +36,12 @@
 #define AMT22_TIM htim15
 #endif
 
+#define PID_PERIOD_US 1000
+#define PID_DT 0.001f
+
 // DEBUG SETTINGS---------------------------------------------------------------
 #define DEBUG_GDB_STUB 0
-#define DEBUG_PID 0
+#define DEBUG_PID 1
 #define DEBUG_ROVER_ARM_MOTOR 0
 #define DEBUG_PRINT_MOTOR 1
 
@@ -47,8 +50,8 @@
 #define DEADBAND_SERVO 10.0f
 
 // MOTOR SETTINGS---------------------------------------------------------------
-#define TEST_WRIST_ROLL_CYTRON 0
-#define TEST_WRIST_PITCH_CYTRON 1
+#define TEST_WRIST_ROLL_CYTRON 1
+#define TEST_WRIST_PITCH_CYTRON 0
 #define TEST_END_EFFECTOR_CYTRON 0
 
 #define TEST_ELBOW_SERVO 0
@@ -56,23 +59,36 @@
 #define TEST_WAIST_SERVO 0
 
 #define TEST_ENCODER 0
+#define TEST_WRIST_ROLL_MINI 1
 #define SIMULATE_LIMIT_SWITCH 1
+#define TEST_LOOP 1
+#define TEST_LIMIT_SWITCH 0
 
 #define ELBOW_MIN_ANGLE MIN_FLOAT
 #define ELBOW_MAX_ANGLE MAX_FLOAT
 #define ELBOW_GEAR_RATIO 1.0f
 
-// WRIST_ROLL_TESTBENCH (DC)
-#define REG_KP_WRIST_ROLL 0.8
-#define REG_KI_WRIST_ROLL 0.1
-#define REG_KD_WRIST_ROLL 0.1
+// WRIST_ROLL_CYTRON
+#if TEST_WRIST_ROLL_MINI == 0
+#define REG_KP_WRIST_ROLL 0.1f
+#define REG_KI_WRIST_ROLL 0.0f
+#define REG_KD_WRIST_ROLL 0.0f
 #define WRIST_ROLL_MIN_ANGLE MIN_FLOAT
 #define WRIST_ROLL_MAX_ANGLE MAX_FLOAT
 #define WRIST_ROLL_GEAR_RATIO 2.672222f
+#else
+#define REG_KP_WRIST_ROLL 0.5f
+#define REG_KI_WRIST_ROLL 0.1f
+#define REG_KD_WRIST_ROLL 0.0f
+#define WRIST_ROLL_MIN_ANGLE MIN_FLOAT
+#define WRIST_ROLL_MAX_ANGLE MAX_FLOAT
+#define WRIST_ROLL_GEAR_RATIO 2.672222f
+// #define WRIST_ROLL_GEAR_RATIO 1.0f
+#endif
 
 // WRIST_PITCH_CYTRON
-#define REG_KP_WRIST_PITCH 0.6
-#define REG_KI_WRIST_PITCH 0
+#define REG_KP_WRIST_PITCH 0.15
+#define REG_KI_WRIST_PITCH 0.1
 #define REG_KD_WRIST_PITCH 0
 #define WRIST_PITCH_MIN_ANGLE 0.0f
 #define WRIST_PITCH_MAX_ANGLE 120.0f
@@ -105,3 +121,4 @@
 void print_motor(char *msg, void *pMotor);
 void rover_arm_setup(void);
 void rover_arm_loop(void);
+void test_limit_switches();

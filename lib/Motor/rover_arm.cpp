@@ -41,7 +41,7 @@ void print_motor(char *msg, void *pMotor)
            current_angle_sw,
            ((RoverArmMotor *)pMotor)->output,
            ((RoverArmMotor *)pMotor)->zero_angle_sw,
-           ((RoverArmMotor *)pMotor)->gearRatio);
+           ((RoverArmMotor *)pMotor)->gear_ratio);
     if (((RoverArmMotor *)pMotor)->encoder_error)
     {
         printf(" (ERROR)\r\n");
@@ -87,10 +87,8 @@ void rover_arm_setup(void)
     /*---WRIST_ROLL_CYTRON setup---*/
 #if TEST_WRIST_ROLL_CYTRON == 1
     Wrist_Roll.wrist_waist = 1;
-    Wrist_Roll.setGearRatio(WRIST_ROLL_GEAR_RATIO);
-#if SIMULATE_LIMIT_SWITCH == 1
-    Wrist_Roll.setGearRatio(1);
-#endif
+    Wrist_Roll.set_gear_ratio(WRIST_ROLL_GEAR_RATIO);
+    // Wrist_Roll.set_gear_ratio(1);
     Wrist_Roll.setAngleLimits(WRIST_ROLL_MIN_ANGLE, WRIST_ROLL_MAX_ANGLE);
     Wrist_Roll.reset_encoder();
     Wrist_Roll.begin(REG_KP_WRIST_ROLL, REG_KI_WRIST_ROLL, REG_KD_WRIST_ROLL);
@@ -104,7 +102,7 @@ void rover_arm_setup(void)
     /*---WRIST_PITCH_CYTRON setup---*/
 #if TEST_WRIST_PITCH_CYTRON == 1
     Wrist_Pitch.wrist_waist = 0;
-    Wrist_Pitch.setGearRatio(WRIST_PITCH_GEAR_RATIO);
+    Wrist_Pitch.set_gear_ratio(WRIST_PITCH_GEAR_RATIO);
     Wrist_Pitch.setAngleLimits(WRIST_PITCH_MIN_ANGLE, WRIST_PITCH_MAX_ANGLE);
     Wrist_Pitch.reset_encoder();
     Wrist_Pitch.begin(REG_KP_WRIST_PITCH, REG_KI_WRIST_PITCH, REG_KD_WRIST_PITCH);
@@ -157,7 +155,7 @@ void rover_arm_loop()
     static unsigned long lastPrint = 0;     // Initialize lastPrint variable
     unsigned long currentMillis = millis(); // get the current "time"
 
-    if (currentMillis - lastPrint >= 100)
+    if (currentMillis - lastPrint >= 200)
     { // If 500ms has passed since the last print operation
 #if TEST_ENCODER == 1
         uint16_t encoderData_1 = 0;
@@ -185,6 +183,19 @@ void rover_arm_loop()
         print_motor("SP Elbow", &Elbow);
 #endif
 #endif
+        lastPrint = currentMillis; // Update the lastPrint time
+    Serial.println();
+    }
+}
+void test_limit_switches()
+{
+    static unsigned long lastPrint = 0;     // Initialize lastPrint variable
+    unsigned long currentMillis = millis(); // get the current "time"
+
+    if (currentMillis - lastPrint >= 200)
+    {
+        Serial.printf("low: %d\r\n", digitalRead(LIMIT_WRIST_PITCH_MIN));
+        Serial.printf("high: %d\r\n", digitalRead(LIMIT_WRIST_PITCH_MAX));
         lastPrint = currentMillis; // Update the lastPrint time
     }
 }
@@ -247,7 +258,7 @@ void rover_arm_loop()
 //   // }
 // }
 
-#define DEBOUNCE_DELAY 500 // Delay for 500 ms. Adjust as needed.
+#define DEBOUNCE_DELAY 250 // Delay for 500 ms. Adjust as needed.
 
 volatile unsigned long last_trigger_time_pitch_max = 0;
 volatile unsigned long last_trigger_time_pitch_min = 0;

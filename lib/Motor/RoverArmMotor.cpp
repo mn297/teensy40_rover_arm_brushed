@@ -44,13 +44,15 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
     lastAngle = 0;
     useSwAngle = 1;    // default use software angle
     zero_angle_sw = 0; // default no offset
-    gearRatio = 1.0;   // default no multiplier
+    gear_ratio = 1.0;   // default no multiplier
     wrist_waist = false;
 
     encoder_error = 0;
 
     _limit_pin_max = limit_pin_max;
     _limit_pin_min = limit_pin_min;
+
+    angle_full_turn = 360.0f;
 }
 
 void RoverArmMotor::begin(double regP, double regI, double regD)
@@ -81,11 +83,11 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     /*------------------Initialize PID------------------*/
     if (escType == CYTRON)
     {
-        internalPIDInstance = new PID(0.005, 99.0, -99.0, regP, regD, regI);
+        internalPIDInstance = new PID(PID_DT, 99.0, -99.0, regP, regD, regI);
     }
     else if (escType == BLUE_ROBOTICS)
     {
-        internalPIDInstance = new PID(0.005, 350.0, -350.0, regP, regD, regI);
+        internalPIDInstance = new PID(PID_DT, 350.0, -350.0, regP, regD, regI);
     }
     Serial.println("RoverArmMotor::begin() 4");
 
@@ -134,7 +136,7 @@ double real_angle = 0;
 // Needs to be called in each loop
 void RoverArmMotor::tick()
 {
-// this->stop(); // stop the motor
+    // this->stop(); // stop the motor
 /*------------------Check limit pins------------------*/
 // Print limit pins status
 #if DEBUG_ROVER_ARM_MOTOR
@@ -185,7 +187,7 @@ void RoverArmMotor::tick()
     double diff;
     if (wrist_waist)
     {
-        diff = min(abs(currentAngle - setpoint), 360.0 - abs(currentAngle - setpoint));
+        diff = min(abs(currentAngle - setpoint), angle_full_turn - abs(currentAngle - setpoint));
     }
     else
     {
@@ -209,14 +211,14 @@ void RoverArmMotor::tick()
     // Find the shortest from the current position to the set point
     if (wrist_waist)
     {
-        forwardDistance = (setpoint > input) ? setpoint - input : (360 - input) + setpoint;
-        backwardDistance = (setpoint > input) ? (360 - setpoint) + input : input - setpoint;
+        forwardDistance = (setpoint > input) ? setpoint - input : (angle_full_turn - input) + setpoint;
+        backwardDistance = (setpoint > input) ? (angle_full_turn - setpoint) + input : input - setpoint;
         // GO BACKWARDS CW
-        if (backwardDistance < forwardDistance - 1.0) // handle hysterisis
+        if (backwardDistance < forwardDistance - 10.0) // handle hysterisis
         {
             if (setpoint > input)
             {
-                output = internalPIDInstance->calculate(setpoint, input + 360); // buff it 360 to go backwards
+                output = internalPIDInstance->calculate(setpoint, input + angle_full_turn); // buff it 360 to go backwards
                 Serial.printf("Case 1, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
             }
             else
@@ -235,7 +237,7 @@ void RoverArmMotor::tick()
             }
             else
             {
-                output = internalPIDInstance->calculate(setpoint, input - 360); // nerf it 360 to go forwards
+                output = internalPIDInstance->calculate(setpoint, input - angle_full_turn); // nerf it 360 to go forwards
                 Serial.printf("Case 4, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
             }
         }
@@ -379,7 +381,7 @@ void RoverArmMotor::set_PID_params(double regP, double regI, double regD)
 bool RoverArmMotor::setMultiplierBool(bool mult, double ratio)
 {
     wrist_waist = mult;
-    gearRatio = ratio;
+    gear_ratio = ratio;
     // a bit redundant but just a sanity check of a second getter method
     if (getRatio() == ratio)
         return true;
@@ -389,24 +391,24 @@ bool RoverArmMotor::setMultiplierBool(bool mult, double ratio)
 // For display purposes
 double RoverArmMotor::getSetpoint()
 {
-    return setpoint / gearRatio;
+    return setpoint / gear_ratio;
 }
 
 bool RoverArmMotor::newSetpoint(double angle)
 {
     Serial.printf("RoverArmMotor::newSetpoint() angle = %f\r\n", angle);
-    double setpoint_test = angle * gearRatio;
+    double temp_setpoint = angle * gear_ratio;
     if (wrist_waist)
     {
-        setpoint_test = std::fmod(setpoint_test, 360 * gearRatio);
-        if (setpoint_test < 0)
+        temp_setpoint = std::fmod(temp_setpoint, angle_full_turn);
+        if (temp_setpoint < 0)
         {
-            setpoint_test += (360 * gearRatio);
+            temp_setpoint += angle_full_turn;
         }
     }
-    if (setpoint_test >= lowestAngle && setpoint_test <= highestAngle)
+    if (temp_setpoint >= lowestAngle && temp_setpoint <= highestAngle)
     {
-        setpoint = setpoint_test;
+        setpoint = temp_setpoint;
         return true;
     }
     else
@@ -421,16 +423,17 @@ int RoverArmMotor::getDirection()
     // return (// HAL_GPIO_ReadPin(dir.port, dir.pin) == GPIO_PIN_SET) ? FWD : REV; // mn297, TODO check if this is correct
 }
 
-void RoverArmMotor::setGearRatio(double ratio)
+void RoverArmMotor::set_gear_ratio(double ratio)
 {
-    gearRatio = ratio;
+    gear_ratio = ratio;
+    angle_full_turn = 360.0f * gear_ratio;
     return;
 }
 
 void RoverArmMotor::setAngleLimits(double lowest, double highest)
 {
-    lowestAngle = lowest * gearRatio;
-    highestAngle = highest * gearRatio;
+    lowestAngle = lowest * gear_ratio;
+    highestAngle = highest * gear_ratio;
     return;
 }
 
@@ -482,11 +485,11 @@ void RoverArmMotor::engageBrake() // TODO
 
 // double RoverArmMotor::get_current_angle_avg()
 //{ // UNSUPPORTED
-//     // return currentAngle / gearRatio;
+//     // return currentAngle / gear_ratio;
 //     uint16_t encoderData = getPositionSPI(spi, encoder.port, encoder.pin, 12, nullptr);  // timer not used, so nullptr
 //     adcResult = internalAveragerInstance.reading(encoderData);                           // implicit cast to int
 //     currentAngle = mapFloat((float)adcResult, MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f); // mn297 potentiometer encoder
-//     return currentAngle / gearRatio;
+//     return currentAngle / gear_ratio;
 // }
 
 double RoverArmMotor::get_current_angle()
@@ -532,10 +535,10 @@ int RoverArmMotor::get_current_angle_sw(double *angle)
     if (wrist_waist) // TODO optimize
     {
         double temp;
-        temp = std::fmod(diff, (360 * gearRatio));
+        temp = std::fmod(diff, (360 * gear_ratio));
         if (temp < 0)
         {
-            temp += (360 * gearRatio);
+            temp += (360 * gear_ratio);
         }
         *angle = temp;
         // printf("diff: %f, angle: %f\r\n", diff, *angle);
@@ -561,7 +564,7 @@ double RoverArmMotor::mapFloat(float x, float in_min, float in_max, float out_mi
 
 double RoverArmMotor::getRatio()
 {
-    return gearRatio;
+    return gear_ratio;
 }
 
 int RoverArmMotor::get_turn_count()

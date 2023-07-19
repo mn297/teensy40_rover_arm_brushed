@@ -25,8 +25,22 @@ extern RoverArmMotor Wrist_Pitch;
 
 uint32_t sp_counter = 0;
 
+volatile bool spiLock = false;     // Lock for SPI
+volatile bool tickRequest = false; // Indicates if tick() wants to use SPI
+
 void rover_arm_timer_routine()
 {
+  noInterrupts();
+  if (spiLock)
+  {
+    // If SPI is currently in use, set the tickRequest flag
+    tickRequest = true;
+    interrupts();
+    return;
+  }
+  spiLock = true;
+  interrupts();
+
 #if TICK == 1
 #if TEST_WRIST_ROLL_CYTRON == 1
   Wrist_Roll.tick();
@@ -34,9 +48,11 @@ void rover_arm_timer_routine()
 #if TEST_WRIST_PITCH_CYTRON == 1
   Wrist_Pitch.tick();
 #else
+#endif
+#endif
 
-#endif
-#endif
+  spiLock = false;
+  tickRequest = false;
 }
 // The setup function runs once when you press reset or power the board
 void setup()
@@ -50,17 +66,39 @@ void setup()
 #endif
 
   Serial.println("Starting up");
+
   SPI.begin(); // initiate SPI bus
+  // SPI.setClockDivider(SPI_CLOCK_DIV128);
+
   rover_arm_setup();
-  delay(500);
-  rover_arm_timer.begin(rover_arm_timer_routine, 50000); // blinkLED will be called every 100ms
-  Serial.println("Setup done");
+  delay(250);
+  rover_arm_timer.begin(rover_arm_timer_routine, PID_PERIOD_US);
+  Serial.println("Setup done, tick() timer started");
 }
 
 // the loop function runs over and over again forever
 void loop()
 {
+  noInterrupts();
+
+  if (tickRequest)
+  {
+    // If tick() wants to access SPI, defer the SPI access
+    // from the main loop and handle it in tick()
+    interrupts();
+    return;
+  }
+  spiLock = true;
+
+  interrupts();
+#if TEST_LOOP == 1
   rover_arm_loop();
+#endif
+#if TEST_LIMIT_SWITCH == 1
+  test_limit_switches();
+#endif
+
+  spiLock = false;
 }
 
 void serialEvent()
