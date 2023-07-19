@@ -37,7 +37,7 @@
 #endif
 
 #define PID_PERIOD_US 1000
-#define PID_DT 0.001f
+#define PID_DT (PID_PERIOD_US * 1e-6f)
 
 // DEBUG SETTINGS---------------------------------------------------------------
 #define DEBUG_GDB_STUB 0
