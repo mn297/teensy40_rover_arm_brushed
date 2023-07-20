@@ -44,7 +44,7 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
     lastAngle = 0;
     useSwAngle = 1;    // default use software angle
     zero_angle_sw = 0; // default no offset
-    gear_ratio = 1.0;   // default no multiplier
+    gear_ratio = 1.0;  // default no multiplier
     wrist_waist = false;
 
     encoder_error = 0;
@@ -73,7 +73,7 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     Serial.println("RoverArmMotor::begin() 2");
 
     /*------------------Initialize timers------------------*/
-    delay(500);                               // wait for the motor to start up
+    delay(250);                               // wait for the motor to start up
     this->stop();                             // stop the motor
     delay(100);                               // wait for the motor to start up
     this->stop();                             // stop the motor
@@ -120,10 +120,10 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     Serial.println("RoverArmMotor::begin() 6");
 
     /*------------------Reverse to hit zero angle------------------*/
-    delay(500); // wait for the motor to start up
+    delay(250); // wait for the motor to start up
     this->reverse();
     Serial.println("RoverArmMotor::begin() 7");
-    delay(500); // wait for the motor to start up
+    delay(250); // wait for the motor to start up
     this->reverse();
     Serial.println("RoverArmMotor::begin() 8");
     return;
@@ -219,12 +219,16 @@ void RoverArmMotor::tick()
             if (setpoint > input)
             {
                 output = internalPIDInstance->calculate(setpoint, input + angle_full_turn); // buff it 360 to go backwards
+#if DEBUG_ROVER_ARM_MOTOR_TICK == 1
                 Serial.printf("Case 1, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
+#endif
             }
             else
             {
                 output = internalPIDInstance->calculate(setpoint, input); // wrapped around so bigger so no need buff 360
+#if DEBUG_ROVER_ARM_MOTOR_TICK == 1
                 Serial.printf("Case 2, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
+#endif
             }
         }
         // GO FORWARDS CCW
@@ -233,12 +237,16 @@ void RoverArmMotor::tick()
             if (setpoint > input)
             {
                 output = internalPIDInstance->calculate(setpoint, input); //  wrapped around so bigger so no need nerf 360
+#if DEBUG_ROVER_ARM_MOTOR_TICK == 1
                 Serial.printf("Case 3, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
+#endif
             }
             else
             {
                 output = internalPIDInstance->calculate(setpoint, input - angle_full_turn); // nerf it 360 to go forwards
+#if DEBUG_ROVER_ARM_MOTOR_TICK == 1
                 Serial.printf("Case 4, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
+#endif
             }
         }
     }
