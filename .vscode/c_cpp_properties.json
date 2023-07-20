@@ -10,6 +10,7 @@
             "includePath": [
                 "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/include",
                 "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/src",
+                "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EEPROM",
                 "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/lib/TeensyDebug/src",
                 "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/lib/Motor",
                 "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/SPI",
@@ -34,7 +35,6 @@
                 "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/DS1307RTC",
                 "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/DmxSimple",
                 "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/DogLcd",
-                "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EEPROM",
                 "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EasyTransfer/src",
                 "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EasyTransferI2C/src",
                 "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/Encoder",
@@ -121,6 +121,7 @@
                 "path": [
                     "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/include",
                     "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/src",
+                    "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EEPROM",
                     "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/lib/TeensyDebug/src",
                     "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/lib/Motor",
                     "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/SPI",
@@ -145,7 +146,6 @@
                     "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/DS1307RTC",
                     "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/DmxSimple",
                     "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/DogLcd",
-                    "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EEPROM",
                     "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EasyTransfer/src",
                     "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EasyTransferI2C/src",
                     "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/Encoder",

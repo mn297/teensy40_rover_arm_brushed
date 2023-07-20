@@ -7,6 +7,8 @@
 #include <limits>
 #include <IntervalTimer.h>
 #include "TeensyDebug.h"
+#include <EEPROM.h>
+#include "DMAChannel.h"
 
 #if DEBUG_GDB_STUB == 1
 // #pragma GCC optimize("O0")
@@ -27,6 +29,36 @@ uint32_t sp_counter = 0;
 
 volatile bool spiLock = false;     // Lock for SPI
 volatile bool tickRequest = false; // Indicates if tick() wants to use SPI
+
+#if USE_DMA == 1
+DMAChannel dmachannel1;
+unsigned char DMA_TxBuf[50]; // transfer buffer 50
+unsigned char DMA_RxBuf[50]; // receive buffer  50
+
+void INT_DMA1(void)
+{
+  int i;
+  dmachannel1.clearInterrupt();
+
+  for (i = 0; i < 8; i++)
+  {
+    Serial.printf("%d\n\r", DMA_RxBuf[i]);
+  }
+}
+
+void DMA_Init(void)
+{
+  //*****************DMA1****************************************************
+  dmachannel1.begin();
+  dmachannel1.source((uint8_t &)LPUART5_DATA);
+  dmachannel1.destinationBuffer(DMA_RxBuf, 8);
+  dmachannel1.triggerAtHardwareEvent(DMAMUX_SOURCE_LPUART5_RX);
+  dmachannel1.interruptAtCompletion();
+  dmachannel1.attachInterrupt(INT_DMA1);
+
+  dmachannel1.enable();
+}
+#endif
 
 void rover_arm_timer_routine()
 {
@@ -117,6 +149,12 @@ void serialEvent()
 
     // Now you can use param1, param2, param3
     Serial.printf("Received angles: %f, %f, %f\r\n", param1, param2, param3);
+
+    // EEPROM.
+    byte val = EEPROM.read(0);
+    Serial.printf("Read %p from EEPROM\r\n", val);
+    EEPROM.write(0, param1);
+    Serial.printf("Wrote %f to EEPROM\r\n", param1);
 
     // Call newSetpoint() with the received angle
     // bool result = Wrist_Roll.newSetpoint(angle);
