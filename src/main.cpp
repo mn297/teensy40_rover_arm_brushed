@@ -100,7 +100,7 @@ void setup()
   Serial.println("Starting up");
 
   SPI.begin(); // initiate SPI bus
-  // SPI.setClockDivider(SPI_CLOCK_DIV128);
+  SPI.setClockDivider(SPI_CLOCK_DIV64);
 
   rover_arm_setup();
   delay(250);

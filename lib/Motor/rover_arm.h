@@ -1,6 +1,8 @@
 // META SETTINGS---------------------------------------------------------------
 #define USE_TEENSY 1
 #define IRQ_DEBUG_PRIORITY 10
+#define USE_BRUSHED 1
+#define USE_BLDC 1
 
 // TEENSY PINS------------------------------------------------------------------
 #ifdef USE_TEENSY
@@ -12,6 +14,7 @@
 #define GPIO_PIN_RESET 0
 #define GPIO_PIN_SET 1
 
+#if USE_BRUSHED == 1
 #define CS1 2
 #define CS2 3
 #define CS3 4
@@ -31,9 +34,21 @@
 #define LIMIT_WRIST_PITCH_MIN NO2
 #define LIMIT_END_EFFECTOR_MAX NO3
 #define LIMIT_END_EFFECTOR_MIN NO4
+#endif
 
+#if USE_BLDC == 1
+#define CS1 10
+#define CS2 9
+#define CS3 8
+#define PWM1 2
+#define PWM2 3
+#define PWM3 4
+
+#define NO1 22
+#define NO2 21
+#define NO3 20
+#define NO4 19
 #else
-#define AMT22_TIM htim15
 #endif
 
 #define PID_PERIOD_US 1000
@@ -54,7 +69,7 @@
 
 // MOTOR SETTINGS---------------------------------------------------------------
 #define TEST_WRIST_ROLL_CYTRON 1
-#define TEST_WRIST_PITCH_CYTRON 0
+#define TEST_WRIST_PITCH_CYTRON 1
 #define TEST_END_EFFECTOR_CYTRON 0
 
 #define TEST_ELBOW_SERVO 0
@@ -62,7 +77,7 @@
 #define TEST_WAIST_SERVO 0
 
 #define TEST_ENCODER 0
-#define TEST_WRIST_ROLL_MINI 1
+#define TEST_WRIST_ROLL_MINI 0
 #define SIMULATE_LIMIT_SWITCH 1
 #define TEST_LOOP 1
 #define TEST_LIMIT_SWITCH 0
@@ -73,8 +88,8 @@
 
 // WRIST_ROLL_CYTRON
 #if TEST_WRIST_ROLL_MINI == 0
-#define REG_KP_WRIST_ROLL 0.1f
-#define REG_KI_WRIST_ROLL 0.0f
+#define REG_KP_WRIST_ROLL 0.4f
+#define REG_KI_WRIST_ROLL 0.1f
 #define REG_KD_WRIST_ROLL 0.0f
 #define WRIST_ROLL_MIN_ANGLE MIN_FLOAT
 #define WRIST_ROLL_MAX_ANGLE MAX_FLOAT
@@ -90,8 +105,8 @@
 #endif
 
 // WRIST_PITCH_CYTRON
-#define REG_KP_WRIST_PITCH 0.15
-#define REG_KI_WRIST_PITCH 0.1
+#define REG_KP_WRIST_PITCH 0.13f
+#define REG_KI_WRIST_PITCH 0.05f
 #define REG_KD_WRIST_PITCH 0
 #define WRIST_PITCH_MIN_ANGLE 0.0f
 #define WRIST_PITCH_MAX_ANGLE 120.0f
@@ -106,9 +121,9 @@
 #define END_EFFECTOR_GEAR_RATIO 1.0f
 
 // ELBOW_SERVO
-#define REG_KP_ELBOW 0.6
-#define REG_KI_ELBOW 0.2
-#define REG_KD_ELBOW 0.1
+#define REG_KP_ELBOW 0.4
+#define REG_KI_ELBOW 0
+#define REG_KD_ELBOW 0
 
 // WAIST_SERVO
 #define REG_KP_WAIST 1.8
