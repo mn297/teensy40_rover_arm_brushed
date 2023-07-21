@@ -24,6 +24,8 @@ IntervalTimer rover_arm_timer;
 
 extern RoverArmMotor Wrist_Roll;
 extern RoverArmMotor Wrist_Pitch;
+extern RoverArmMotor End_Effector;
+extern RoverArmMotor Elbow;
 
 uint32_t sp_counter = 0;
 
@@ -79,8 +81,20 @@ void rover_arm_timer_routine()
 #endif
 #if TEST_WRIST_PITCH_CYTRON == 1
   Wrist_Pitch.tick();
-#else
 #endif
+#if TEST_END_EFFECTOR_CYTRON == 1
+  End_Effector.tick();
+#endif
+#if TEST_ELBOW_SERVO == 1
+  Elbow.tick();
+#endif
+#if TEST_SHOULDER_SERVO == 1
+  Shoulder.tick();
+#endif
+#if TEST_WAIST_SERVO == 1
+  Waist.tick();
+#endif
+#else
 #endif
 
   spiLock = false;
@@ -164,6 +178,12 @@ void serialEvent()
 #if TEST_WRIST_PITCH_CYTRON == 1
     bool result2 = Wrist_Pitch.newSetpoint(param1);
 #endif
+#if TEST_END_EFFECTOR_CYTRON == 1
+    bool result3 = End_Effector.newSetpoint(param1);
+#endif
+#if TEST_ELBOW_SERVO == 1
+    bool result4 = Elbow.newSetpoint(param1);
+#endif
 
     // Print status.
 #if TEST_WRIST_ROLL_CYTRON == 1
@@ -171,6 +191,12 @@ void serialEvent()
 #endif
 #if TEST_WRIST_PITCH_CYTRON == 1
     Serial.printf("Wrist_Pitch newSetpoint at %lf result: %d\r\n", param2, result2);
+#endif
+#if TEST_END_EFFECTOR_CYTRON == 1
+    Serial.printf("End_Effector newSetpoint at %lf result: %d\r\n", param3, result3);
+#endif
+#if TEST_ELBOW_SERVO == 1
+    Serial.printf("Elbow newSetpoint at %lf result: %d\r\n", param1 , result4);
 #endif
   }
 }

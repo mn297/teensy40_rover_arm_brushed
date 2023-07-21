@@ -10,7 +10,7 @@
 #include <cmath>
 #include "rover_arm.h"
 
-#define BLUE_ROBOTICS_STOP_DUTY_CYCLE 0.6f
+#define BLUE_ROBOTICS_STOP_DUTY_CYCLE 60.0f
 
 // The motor will not move until begin() is called!
 /**
@@ -73,9 +73,9 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     Serial.println("RoverArmMotor::begin() 2");
 
     /*------------------Initialize timers------------------*/
-    delay(250);                               // wait for the motor to start up
+    delay(300 * DELAY_FACTOR);                // wait for the motor to start up
     this->stop();                             // stop the motor
-    delay(100);                               // wait for the motor to start up
+    delay(250 * DELAY_FACTOR);                // wait for the motor to start up
     this->stop();                             // stop the motor
     Serial.println("_pwm = " + String(_pwm)); // mn297
     Serial.println("RoverArmMotor::begin() 3");
@@ -96,7 +96,7 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     // as the microcontroller initializes.
     // adcResult = internalAveragerInstance.reading(analogRead(encoder));
     // after setup, currentAngle is same as setpoint
-    delay(100);                                      // safety
+    delay(100 * DELAY_FACTOR);                       // safety
     int error = get_current_angle_sw(&currentAngle); // fix setpoint not equal to current angle
     if (error == -1)
     {
@@ -120,10 +120,10 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     Serial.println("RoverArmMotor::begin() 6");
 
     /*------------------Reverse to hit zero angle------------------*/
-    delay(250); // wait for the motor to start up
+    delay(300 * DELAY_FACTOR); // wait for the motor to start up
     this->reverse();
     Serial.println("RoverArmMotor::begin() 7");
-    delay(250); // wait for the motor to start up
+    delay(300 * DELAY_FACTOR); // wait for the motor to start up
     this->reverse();
     Serial.println("RoverArmMotor::begin() 8");
     return;
@@ -304,7 +304,7 @@ void RoverArmMotor::tick()
             //     temp_output = (output - deadband / 2);
             // }
         }
-        volatile double output_actual = (1500 - 1 + temp_output) / 2500;
+        volatile double output_actual = (1500.0f - 1.0f + output) * 100.0f / 2500.0f;
         pwmInstance->setPWM(_pwm, _pwm_freq, output_actual);
         return;
     }
@@ -370,6 +370,9 @@ void RoverArmMotor::stop()
     }
     else if (escType == BLUE_ROBOTICS)
     {
+#if DEBUG_ROVER_ARM_MOTOR == 1
+        Serial.println("RoverArmMotor::stop() SERVO");
+#endif
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 1499);
         pwmInstance->setPWM(_pwm, _pwm_freq, BLUE_ROBOTICS_STOP_DUTY_CYCLE);
         return;

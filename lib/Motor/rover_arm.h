@@ -1,7 +1,7 @@
 // META SETTINGS---------------------------------------------------------------
 #define USE_TEENSY 1
 #define IRQ_DEBUG_PRIORITY 10
-#define USE_BRUSHED 1
+#define USE_BRUSHED 0
 #define USE_BLDC 1
 
 // TEENSY PINS------------------------------------------------------------------
@@ -13,8 +13,10 @@
 #define TIM_HandleTypeDef void
 #define GPIO_PIN_RESET 0
 #define GPIO_PIN_SET 1
+#endif
 
 #if USE_BRUSHED == 1
+#define DELAY_FACTOR 1
 #define CS1 2
 #define CS2 3
 #define CS3 4
@@ -37,6 +39,7 @@
 #endif
 
 #if USE_BLDC == 1
+#define DELAY_FACTOR 2
 #define CS1 10
 #define CS2 9
 #define CS3 8
@@ -48,7 +51,9 @@
 #define NO2 21
 #define NO3 20
 #define NO4 19
-#else
+
+#define ELBOW_BRAKE 14
+#define WAIST_BRAKE 15
 #endif
 
 #define PID_PERIOD_US 1000
@@ -63,16 +68,16 @@
 
 // DEADBAND SETTINGS------------------------------------------------------------
 #define DEADBAND_CYTRON 0.8f
-#define DEADBAND_SERVO 10.0f
+#define DEADBAND_SERVO 18.0f
 #define IRQ_DEBUG IRQ_SOFTWARE
 #define USE_DMA 0
 
 // MOTOR SETTINGS---------------------------------------------------------------
-#define TEST_WRIST_ROLL_CYTRON 1
-#define TEST_WRIST_PITCH_CYTRON 1
+#define TEST_WRIST_ROLL_CYTRON 0
+#define TEST_WRIST_PITCH_CYTRON 0
 #define TEST_END_EFFECTOR_CYTRON 0
 
-#define TEST_ELBOW_SERVO 0
+#define TEST_ELBOW_SERVO 1
 #define TEST_SHOULDER_SERVO 0
 #define TEST_WAIST_SERVO 0
 
@@ -121,9 +126,9 @@
 #define END_EFFECTOR_GEAR_RATIO 1.0f
 
 // ELBOW_SERVO
-#define REG_KP_ELBOW 0.4
-#define REG_KI_ELBOW 0
-#define REG_KD_ELBOW 0
+#define REG_KP_ELBOW 0.3
+#define REG_KI_ELBOW 0.2
+#define REG_KD_ELBOW 0.2
 
 // WAIST_SERVO
 #define REG_KP_WAIST 1.8

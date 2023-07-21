@@ -69,7 +69,7 @@ RoverArmMotor End_Effector(&hspi1, CYTRON_PWM_1, CYTRON_DIR_1, AMT22_1, CYTRON, 
 
 /*---------------------ELBOW_SERVO DECLARATIONS---------------------*/
 #if TEST_ELBOW_SERVO == 1
-RoverArmMotor Elbow(&hspi1, SERVO_PWM_1, dummy_pin, AMT22_1, BLUE_ROBOTICS, 0, 359.99f);
+RoverArmMotor Elbow(PWM1, -1, CS1, BLUE_ROBOTICS, 0, 359.99f);
 #endif
 
 /*---------------------SHOULDER_SERVO DECLARATIONS---------------------*/
@@ -129,9 +129,14 @@ void rover_arm_setup(void)
 
     /* ELBOW_SERVO setup */
 #if TEST_ELBOW_SERVO == 1
-    Elbow.setAngleLimits(0, 120);
+    Elbow.setAngleLimits(0, 240);
     Elbow.reset_encoder();
-    Elbow.begin(regKp_elbow, regKi_elbow, regKd_elbow);
+    Elbow.begin(REG_KP_ELBOW, REG_KI_ELBOW, REG_KD_ELBOW);
+#if SIMULATE_LIMIT_SWITCH == 1
+    Elbow.stop();
+    Elbow.set_current_as_zero_angle_sw();
+    Elbow.newSetpoint(0.0);
+#endif
 #endif
     /*---WAIST_SERVO setup---*/
 #if TEST_WAIST_SERVO == 1
@@ -184,7 +189,7 @@ void rover_arm_loop()
 #endif
 #endif
         lastPrint = currentMillis; // Update the lastPrint time
-    Serial.println();
+        Serial.println();
     }
 }
 void test_limit_switches()
@@ -194,8 +199,12 @@ void test_limit_switches()
 
     if (currentMillis - lastPrint >= 200)
     {
+#if TEST_WRIST_ROLL_CYTRON == 1
         Serial.printf("low: %d\r\n", digitalRead(LIMIT_WRIST_PITCH_MIN));
+#endif
+#if TEST_WRIST_PITCH_CYTRON == 1
         Serial.printf("high: %d\r\n", digitalRead(LIMIT_WRIST_PITCH_MAX));
+#endif
         lastPrint = currentMillis; // Update the lastPrint time
     }
 }
