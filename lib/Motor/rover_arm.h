@@ -1,8 +1,8 @@
 // META SETTINGS---------------------------------------------------------------
 #define USE_TEENSY 1
 #define IRQ_DEBUG_PRIORITY 10
-#define USE_BRUSHED 0
-#define USE_BLDC 1
+#define BRUSHED_ARM 0
+#define BRUSHLESS_ARM 1
 
 // TEENSY PINS------------------------------------------------------------------
 #ifdef USE_TEENSY
@@ -15,7 +15,7 @@
 #define GPIO_PIN_SET 1
 #endif
 
-#if USE_BRUSHED == 1
+#if BRUSHED_ARM == 1
 #define DELAY_FACTOR 1
 #define CS1 2
 #define CS2 3
@@ -38,7 +38,7 @@
 #define LIMIT_END_EFFECTOR_MIN NO4
 #endif
 
-#if USE_BLDC == 1
+#if BRUSHLESS_ARM == 1
 #define DELAY_FACTOR 2
 #define CS1 10
 #define CS2 9
@@ -73,13 +73,17 @@
 #define USE_DMA 0
 
 // MOTOR SETTINGS---------------------------------------------------------------
-#define TEST_WRIST_ROLL_CYTRON 0
-#define TEST_WRIST_PITCH_CYTRON 0
+#if BRUSHED_ARM == 1
+#define TEST_WRIST_ROLL_CYTRON 1
+#define TEST_WRIST_PITCH_CYTRON 1
 #define TEST_END_EFFECTOR_CYTRON 0
+#endif
 
-#define TEST_ELBOW_SERVO 1
-#define TEST_SHOULDER_SERVO 0
+#if BRUSHLESS_ARM == 1
+#define TEST_ELBOW_SERVO 0
+#define TEST_SHOULDER_SERVO 1
 #define TEST_WAIST_SERVO 0
+#endif
 
 #define TEST_ENCODER 0
 #define TEST_WRIST_ROLL_MINI 0
@@ -129,16 +133,22 @@
 #define REG_KP_ELBOW 0.3
 #define REG_KI_ELBOW 0.2
 #define REG_KD_ELBOW 0.2
+#define ELBOW_MIN_ANGLE 0
+#define ELBOW_MAX_ANGLE 240.0f
+
+// SHOULDER_SERVO
+#define REG_KP_SHOULDER 0.2
+#define REG_KI_SHOULDER 0
+#define REG_KD_SHOULDER 0
+#define SHOULDER_MIN_ANGLE 0
+#define SHOULDER_MAX_ANGLE 15.0f
 
 // WAIST_SERVO
 #define REG_KP_WAIST 1.8
 #define REG_KI_WAIST 1.0
 #define REG_KD_WAIST 0.5
-
-// SHOULDER_SERVO
-#define REG_KP_SHOULDER 1.0
-#define REG_KI_SHOULDER 0.5
-#define REG_KD_SHOULDER 0.2
+#define WAIST_MIN_ANGLE MIN_FLOAT
+#define WAIST_MAX_ANGLE MAX_FLOAT
 
 // FUNCTION PROTOTYPES----------------------------------------------------------
 void print_motor(char *msg, void *pMotor);

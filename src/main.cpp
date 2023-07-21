@@ -14,7 +14,6 @@
 // #pragma GCC optimize("O0")
 #endif
 
-IntervalTimer rover_arm_timer;
 
 // No additional #include statements are needed
 #define TICK 1
@@ -26,11 +25,6 @@ extern RoverArmMotor Wrist_Roll;
 extern RoverArmMotor Wrist_Pitch;
 extern RoverArmMotor End_Effector;
 extern RoverArmMotor Elbow;
-
-uint32_t sp_counter = 0;
-
-volatile bool spiLock = false;     // Lock for SPI
-volatile bool tickRequest = false; // Indicates if tick() wants to use SPI
 
 #if USE_DMA == 1
 DMAChannel dmachannel1;
@@ -62,44 +56,6 @@ void DMA_Init(void)
 }
 #endif
 
-void rover_arm_timer_routine()
-{
-  noInterrupts();
-  if (spiLock)
-  {
-    // If SPI is currently in use, set the tickRequest flag
-    tickRequest = true;
-    interrupts();
-    return;
-  }
-  spiLock = true;
-  interrupts();
-
-#if TICK == 1
-#if TEST_WRIST_ROLL_CYTRON == 1
-  Wrist_Roll.tick();
-#endif
-#if TEST_WRIST_PITCH_CYTRON == 1
-  Wrist_Pitch.tick();
-#endif
-#if TEST_END_EFFECTOR_CYTRON == 1
-  End_Effector.tick();
-#endif
-#if TEST_ELBOW_SERVO == 1
-  Elbow.tick();
-#endif
-#if TEST_SHOULDER_SERVO == 1
-  Shoulder.tick();
-#endif
-#if TEST_WAIST_SERVO == 1
-  Waist.tick();
-#endif
-#else
-#endif
-
-  spiLock = false;
-  tickRequest = false;
-}
 // The setup function runs once when you press reset or power the board
 void setup()
 {
@@ -111,40 +67,18 @@ void setup()
   halt_cpu(); // stop on startup; if not, Teensy keeps running and you
 #endif
 
-  Serial.println("Starting up");
-
-  SPI.begin(); // initiate SPI bus
-  SPI.setClockDivider(SPI_CLOCK_DIV64);
-
   rover_arm_setup();
-  delay(250);
-  rover_arm_timer.begin(rover_arm_timer_routine, PID_PERIOD_US);
-  Serial.println("Setup done, tick() timer started");
 }
 
 // the loop function runs over and over again forever
 void loop()
 {
-  noInterrupts();
-
-  if (tickRequest)
-  {
-    // If tick() wants to access SPI, defer the SPI access
-    // from the main loop and handle it in tick()
-    interrupts();
-    return;
-  }
-  spiLock = true;
-
-  interrupts();
 #if TEST_LOOP == 1
   rover_arm_loop();
 #endif
 #if TEST_LIMIT_SWITCH == 1
   test_limit_switches();
 #endif
-
-  spiLock = false;
 }
 
 void serialEvent()

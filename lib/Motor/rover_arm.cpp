@@ -3,6 +3,7 @@
 #include "RoverArmMotor.h"
 #include "AMT22.h"
 #include <Arduino.h>
+#include <SPI.h>
 
 // Standard includes.
 #include <stdint.h>
@@ -21,6 +22,11 @@ int turn = 0;
 int limit_set = 0;
 int button_counter = 0;
 int is_turning = 0;
+
+// LOOP control variables.
+IntervalTimer rover_arm_timer;
+volatile bool spiLock = false;     // Lock for SPI
+volatile bool tickRequest = false; // Indicates if tick() wants to use SPI
 
 /*---------------------UART---------------------*/
 const int RX_BUFFER_SIZE = 32;
@@ -82,8 +88,49 @@ RoverArmMotor Shoulder(&hspi1, SERVO_PWM_1, dummy_pin, AMT22_1, BLUE_ROBOTICS, 0
 RoverArmMotor Waist(&hspi1, SERVO_PWM_1, dummy_pin, AMT22_1, BLUE_ROBOTICS, 0, 359.99f);
 #endif
 
+void rover_arm_timer_routine()
+{
+    noInterrupts();
+    if (spiLock)
+    {
+        // If SPI is currently in use, set the tickRequest flag.
+        tickRequest = true;
+        interrupts();
+        return;
+    }
+    spiLock = true;
+    interrupts();
+
+#if TEST_WRIST_ROLL_CYTRON == 1
+    Wrist_Roll.tick();
+#endif
+#if TEST_WRIST_PITCH_CYTRON == 1
+    Wrist_Pitch.tick();
+#endif
+#if TEST_END_EFFECTOR_CYTRON == 1
+    End_Effector.tick();
+#endif
+#if TEST_ELBOW_SERVO == 1
+    Elbow.tick();
+#endif
+#if TEST_SHOULDER_SERVO == 1
+    Shoulder.tick();
+#endif
+#if TEST_WAIST_SERVO == 1
+    Waist.tick();
+#endif
+
+    spiLock = false;
+    tickRequest = false;
+}
+
 void rover_arm_setup(void)
 {
+    Serial.println("Starting up");
+
+    SPI.begin(); // initiate SPI bus
+    SPI.setClockDivider(SPI_CLOCK_DIV64);
+
     /*---WRIST_ROLL_CYTRON setup---*/
 #if TEST_WRIST_ROLL_CYTRON == 1
     Wrist_Roll.wrist_waist = 1;
@@ -129,7 +176,7 @@ void rover_arm_setup(void)
 
     /* ELBOW_SERVO setup */
 #if TEST_ELBOW_SERVO == 1
-    Elbow.setAngleLimits(0, 240);
+    Elbow.setAngleLimits(ELBOW_MIN_ANGLE, ELBOW_MAX_ANGLE);
     Elbow.reset_encoder();
     Elbow.begin(REG_KP_ELBOW, REG_KI_ELBOW, REG_KD_ELBOW);
 #if SIMULATE_LIMIT_SWITCH == 1
@@ -153,10 +200,24 @@ void rover_arm_setup(void)
         ;
 #endif
     attach_all_interrupts();
+    delay(250);
+    rover_arm_timer.begin(rover_arm_timer_routine, PID_PERIOD_US);
+    Serial.println("Setup done, tick() timer started");
 }
 
 void rover_arm_loop()
 {
+    noInterrupts();
+    if (tickRequest)
+    {
+        // If tick() wants to access SPI, defer the SPI access
+        // from the main loop and handle it in tick()
+        interrupts();
+        return;
+    }
+    spiLock = true;
+    interrupts();
+
     static unsigned long lastPrint = 0;     // Initialize lastPrint variable
     unsigned long currentMillis = millis(); // get the current "time"
 
@@ -191,6 +252,7 @@ void rover_arm_loop()
         lastPrint = currentMillis; // Update the lastPrint time
         Serial.println();
     }
+    spiLock = false;
 }
 void test_limit_switches()
 {
@@ -208,64 +270,6 @@ void test_limit_switches()
         lastPrint = currentMillis; // Update the lastPrint time
     }
 }
-
-// void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-// {
-//   // if(!limit_set) {
-//   if (GPIO_Pin == B1_Pin && HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_RESET) // INT Source is pin A9
-//   {
-//     is_turning = !is_turning;
-// #if TEST_WRIST_ROLL_CYTRON == 1
-//     Wrist_Roll.stop();
-//     Wrist_Roll.set_current_as_zero_angle_sw();
-//     Wrist_Roll.newSetpoint(0.0);
-// #endif
-
-// #if TEST_WRIST_PITCH_CYTRON == 1
-//     Wrist_Pitch.stop();
-//     Wrist_Pitch.set_current_as_zero_angle_sw();
-//     Wrist_Pitch.newSetpoint(0.0);
-// #endif
-
-// #if TEST_WAIST_SERVO == 1
-//     Waist.stop();
-//     Waist.set_current_as_zero_angle_sw();
-//     Waist.newSetpoint(0.0);
-// #endif
-
-// #if TEST_ELBOW_SERVO == 1
-//     Elbow.stop();
-//     Elbow.set_current_as_zero_angle_sw();
-//     Elbow.newSetpoint(0.0);
-// #endif
-
-// #if TEST_END_EFFECTOR_CYTRON == 1
-//     End_Effector.stop();
-//     End_Effector.set_current_as_zero_angle_sw();
-//     End_Effector.newSetpoint(0.0);
-// #endif
-
-//     limit_set = 1;
-//   }
-
-// #if TEST_WRIST_PITCH_CYTRON == 1
-//   if (GPIO_Pin == LIMIT_WRIST_PITCH_MIN_Pin && HAL_GPIO_ReadPin(LIMIT_WRIST_PITCH_MIN_GPIO_Port, LIMIT_WRIST_PITCH_MIN_Pin) == GPIO_PIN_RESET)
-//   {
-//     Wrist_Pitch.stop();
-//     Wrist_Pitch.set_current_as_zero_angle_sw();
-//   }
-
-//   if (GPIO_Pin == LIMIT_WRIST_PITCH_MAX_Pin && HAL_GPIO_ReadPin(LIMIT_WRIST_PITCH_MAX_GPIO_Port, LIMIT_WRIST_PITCH_MAX_Pin) == GPIO_PIN_RESET)
-//   {
-//     Wrist_Pitch.stop();
-//     Wrist_Pitch.set_max_angle_sw();
-//   }
-// #endif
-
-//   button_counter++;
-//   return;
-//   // }
-// }
 
 #define DEBOUNCE_DELAY 250 // Delay for 500 ms. Adjust as needed.
 
