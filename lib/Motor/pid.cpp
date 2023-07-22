@@ -37,6 +37,7 @@ public:
     PIDImpl(double dt, double max, double min, double Kp, double Kd, double Ki);
     ~PIDImpl();
     double calculate(double setpoint, double pv);
+    void setPID(double Kp, double Kd, double Ki);
 
 private:
     double _dt;
@@ -60,6 +61,10 @@ double PID::calculate(double setpoint, double pv)
 PID::~PID()
 {
     delete pimpl;
+}
+void PID::setPID(double Kp, double Kd, double Ki)
+{
+    pimpl->setPID(Kp, Kd, Ki);
 }
 
 /**
@@ -93,11 +98,6 @@ double PIDImpl::calculate(double setpoint, double pv)
     // double derivative = (error - _pre_error) / _dt;
     // double Dout = _Kd * derivative;
 
-    // mn297 fixed derivative term 1 
-    // double derivative = (abs(error) - abs(_pre_error)) / _dt;
-    // double Dout = _Kd * derivative;
-
-    // mn297 fixed derivative term 2
     double derivative = error / _dt;
     double Dout = _Kd * derivative / 100;
 
@@ -122,6 +122,13 @@ double PIDImpl::calculate(double setpoint, double pv)
 
 PIDImpl::~PIDImpl()
 {
+}
+void PIDImpl::setPID(double Kp, double Kd, double Ki)
+{
+    Serial.printf("Kp: %f, Kd: %f, Ki: %f\r\n", Kp, Kd, Ki);
+    _Kp = Kp;
+    _Kd = Kd;
+    _Ki = Ki;
 }
 
 #endif

@@ -1,8 +1,8 @@
 // META SETTINGS---------------------------------------------------------------
 #define USE_TEENSY 1
 #define IRQ_DEBUG_PRIORITY 10
-#define BRUSHED_ARM 0
-#define BRUSHLESS_ARM 1
+#define BRUSHED_ARM 1
+#define BRUSHLESS_ARM 0
 
 // TEENSY PINS------------------------------------------------------------------
 #ifdef USE_TEENSY
@@ -56,9 +56,10 @@
 #define WAIST_BRAKE 15
 #endif
 
-#define PID_PERIOD_US 1000
+#define PID_PERIOD_US 2000
 #define PID_DT (PID_PERIOD_US * 1e-6f)
 
+#define ROVER_LOOP_PERIOD_MS 250
 // DEBUG SETTINGS---------------------------------------------------------------
 #define DEBUG_GDB_STUB 0
 #define DEBUG_PID 0
@@ -97,9 +98,12 @@
 
 // WRIST_ROLL_CYTRON
 #if TEST_WRIST_ROLL_MINI == 0
-#define REG_KP_WRIST_ROLL 0.4f
+#define REG_KP_WRIST_ROLL 0.15f
 #define REG_KI_WRIST_ROLL 0.1f
-#define REG_KD_WRIST_ROLL 0.0f
+#define REG_KD_WRIST_ROLL 0.02f
+#define REG_KP_WRIST_ROLL_AGG 0.3f
+#define REG_KI_WRIST_ROLL_AGG 0.1f
+#define REG_KD_WRIST_ROLL_AGG 0.02f
 #define WRIST_ROLL_MIN_ANGLE MIN_FLOAT
 #define WRIST_ROLL_MAX_ANGLE MAX_FLOAT
 #define WRIST_ROLL_GEAR_RATIO 2.672222f
@@ -114,9 +118,12 @@
 #endif
 
 // WRIST_PITCH_CYTRON
-#define REG_KP_WRIST_PITCH 0.13f
+#define REG_KP_WRIST_PITCH 0.08f
 #define REG_KI_WRIST_PITCH 0.05f
-#define REG_KD_WRIST_PITCH 0
+#define REG_KD_WRIST_PITCH 0.05f
+#define REG_KP_WRIST_PITCH_AGG 0.08f
+#define REG_KI_WRIST_PITCH_AGG 0.05f
+#define REG_KD_WRIST_PITCH_AGG 0.05f
 #define WRIST_PITCH_MIN_ANGLE 0.0f
 #define WRIST_PITCH_MAX_ANGLE 120.0f
 #define WRIST_PITCH_GEAR_RATIO 1.0f

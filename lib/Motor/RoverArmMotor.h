@@ -58,7 +58,7 @@ public:
     double getRatio();
     // void set_gear_ratio(double ratio);
 
-    void begin(double regP, double regI, double regD);
+    void begin(double regP, double regI, double regD, double aggP, double aggI, double aggD);
     void tick();
     int forward(int percentage_speed = 25);
     int reverse(int percentage_speed = 25);
@@ -73,7 +73,9 @@ public: // TESTING only
     PID *internalPIDInstance;
     Teensy_PWM *pwmInstance;
 
-    double regularKp, regularKi, regularKd;
+    double regKp, regKi, regKd;
+    double aggKp, aggKi, aggKd;
+
     // PINS
     int _pwm, _dir, _encoder, _limit_switch;
     int _limit_pin_max;
@@ -103,6 +105,7 @@ public: // TESTING only
     double angle_full_turn;
 
     int encoder_error;
+    int stop_tick;
 
     enum ActuationStates
     {

@@ -48,6 +48,7 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
     wrist_waist = false;
 
     encoder_error = 0;
+    stop_tick = 0;
 
     _limit_pin_max = limit_pin_max;
     _limit_pin_min = limit_pin_min;
@@ -55,7 +56,7 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
     angle_full_turn = 360.0f;
 }
 
-void RoverArmMotor::begin(double regP, double regI, double regD)
+void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, double aggI, double aggD)
 {
     Serial.println("RoverArmMotor::begin()");
     /*------------------Set pin modes------------------*/
@@ -110,9 +111,9 @@ void RoverArmMotor::begin(double regP, double regI, double regD)
     Serial.println("RoverArmMotor::begin() 5");
 
     /*------------------Set PID parameters------------------*/
-    regularKp = regP;
-    regularKi = regI;
-    regularKd = regD;
+    regKp = regP;
+    regKi = regI;
+    regKd = regD;
 
     // if(brake)  engageBrake(); //use brake if there is one
     if (_limit_switch != -1)
@@ -136,7 +137,10 @@ double real_angle = 0;
 // Needs to be called in each loop
 void RoverArmMotor::tick()
 {
-    // this->stop(); // stop the motor
+    if (stop_tick)
+    {
+        this->stop(); // stop the motor
+    }
 /*------------------Check limit pins------------------*/
 // Print limit pins status
 #if DEBUG_ROVER_ARM_MOTOR
@@ -150,6 +154,7 @@ void RoverArmMotor::tick()
         if (digitalRead(_limit_pin_max) == LOW)
         {
             this->stop();
+            this->reverse(10);
 #if DEBUG_ROVER_ARM_MOTOR
             Serial.println("RoverArmMotor::tick() _limit_pin_max");
 #endif
@@ -158,6 +163,7 @@ void RoverArmMotor::tick()
         if (digitalRead(_limit_pin_min) == LOW)
         {
             this->stop();
+            this->forward(10);
 #if DEBUG_ROVER_ARM_MOTOR
             Serial.println("RoverArmMotor::tick() _limit_pin_min");
 #endif
@@ -202,7 +208,12 @@ void RoverArmMotor::tick()
         this->stop(); // stop the motor
         return;
     }
-
+    // if (diff > 30.0)
+    // {
+    //     internalPIDInstance->setPID(aggKp, aggKi, aggKd);
+    // } else {
+    //     internalPIDInstance->setPID(regKp, regKi, regKd);
+    // }
     input = currentAngle; // range is R line
     lastAngle = currentAngle;
 
@@ -383,9 +394,10 @@ void RoverArmMotor::stop()
 // Useless at the moment.
 void RoverArmMotor::set_PID_params(double regP, double regI, double regD)
 {
-    regularKp = regP;
-    regularKi = regI;
-    regularKd = regD;
+    regKp = regP;
+    regKi = regI;
+    regKd = regD;
+    
     return;
 }
 
@@ -432,6 +444,7 @@ int RoverArmMotor::getDirection()
 {
     // return (digitalRead(dir) == HIGH) ? FWD : REV;
     // return (// HAL_GPIO_ReadPin(dir.port, dir.pin) == GPIO_PIN_SET) ? FWD : REV; // mn297, TODO check if this is correct
+    return;
 }
 
 void RoverArmMotor::set_gear_ratio(double ratio)
