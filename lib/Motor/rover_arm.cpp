@@ -411,6 +411,86 @@ void limit_end_effector_min_int()
 }
 #endif
 
+#if TEST_ELBOW_SERVO == 1
+void limit_elbow_max_int()
+{
+    unsigned long now = millis();
+    if (now - last_trigger_time_end_effector_max > DEBOUNCE_DELAY)
+    {
+        last_trigger_time_end_effector_max = now;
+        if (digitalRead(LIMIT_ELBOW_MAX) == LOW)
+        {
+            limit_end_effector_max_activated = 1;
+            Serial.println("Elbow max limit reached");
+            Elbow.stop();
+        }
+        else
+        {
+            limit_end_effector_max_activated = 0;
+        }
+    }
+}
+
+void limit_elbow_min_int()
+{
+    unsigned long now = millis();
+    if (now - last_trigger_time_end_effector_min > DEBOUNCE_DELAY)
+    {
+        last_trigger_time_end_effector_min = now;
+        if (digitalRead(LIMIT_ELBOW_MIN) == LOW)
+        {
+            limit_end_effector_min_activated = 1;
+            Serial.println("Elbow min limit reached");
+            Elbow.stop();
+        }
+        else
+        {
+            limit_end_effector_min_activated = 0;
+        }
+    }
+}
+#endif
+
+#if TEST_SHOULDER_SERVO == 1
+void limit_shoulder_max_int()
+{
+    unsigned long now = millis();
+    if (now - last_trigger_time_end_effector_max > DEBOUNCE_DELAY)
+    {
+        last_trigger_time_end_effector_max = now;
+        if (digitalRead(LIMIT_SHOULDER_MAX) == LOW)
+        {
+            limit_end_effector_max_activated = 1;
+            Serial.println("Shoulder max limit reached");
+            Shoulder.stop();
+        }
+        else
+        {
+            limit_end_effector_max_activated = 0;
+        }
+    }
+}
+
+void limit_shoulder_min_int()
+{
+    unsigned long now = millis();
+    if (now - last_trigger_time_end_effector_min > DEBOUNCE_DELAY)
+    {
+        last_trigger_time_end_effector_min = now;
+        if (digitalRead(LIMIT_SHOULDER_MIN) == LOW)
+        {
+            limit_end_effector_min_activated = 1;
+            Serial.println("Shoulder min limit reached");
+            Shoulder.stop();
+        }
+        else
+        {
+            limit_end_effector_min_activated = 0;
+        }
+    }
+}
+#endif
+
 void attach_all_interrupts()
 {
 #if TEST_WRIST_PITCH_CYTRON == 1
@@ -421,5 +501,15 @@ void attach_all_interrupts()
 #if TEST_END_EFFECTOR_CYTRON == 1
     attachInterrupt(digitalPinToInterrupt(LIMIT_END_EFFECTOR_MAX), limit_end_effector_max_int, CHANGE);
     attachInterrupt(digitalPinToInterrupt(LIMIT_END_EFFECTOR_MIN), limit_end_effector_min_int, CHANGE);
+#endif
+
+#if TEST_ELBOX_SERVO == 1
+    attachInterrupt(digitalPinToInterrupt(LIMIT_ELBOW_MAX), limit_elbow_max_int, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(LIMIT_ELBOW_MIN), limit_elbow_min_int, CHANGE);
+#endif
+
+#if TEST_SHOULDER_SERVO == 1
+    attachInterrupt(digitalPinToInterrupt(LIMIT_SHOULDER_MAX), limit_shoulder_max_int, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(LIMIT_SHOULDER_MIN), limit_shoulder_min_int, CHANGE);
 #endif
 }

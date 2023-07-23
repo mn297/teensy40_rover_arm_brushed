@@ -62,7 +62,7 @@
 #define LIMIT_WAIST_MIN NO4
 #endif
 
-#define PID_PERIOD_US 2000
+#define PID_PERIOD_US 10000
 #define PID_DT (PID_PERIOD_US * 1e-6f)
 
 #define ROVER_LOOP_PERIOD_MS 250
