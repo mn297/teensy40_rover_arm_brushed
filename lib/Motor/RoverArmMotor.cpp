@@ -130,12 +130,15 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     Serial.println("RoverArmMotor::begin() 6");
 
     /*------------------Mastering------------------*/
+#if MASTERING == 1
     Serial.println("RoverArmMotor::begin() 7 Mastering");
     delay(250 * DELAY_FACTOR); // wait for the motor to start up
     this->reverse();
     delay(250 * DELAY_FACTOR); // wait for the motor to start up
     this->reverse();
     Serial.println("RoverArmMotor::begin() 8");
+#endif
+
     return;
 }
 
@@ -218,7 +221,12 @@ void RoverArmMotor::tick()
         this->stop(); // stop the motor
         return;
     }
-    if (diff > 30.0)
+
+    input = currentAngle; // range is R line
+    lastAngle = currentAngle;
+    //------------------Compute PID------------------//
+    // Retune PID for small errors.
+        if (diff > 30.0)
     {
         internalPIDInstance->setPID(aggKp, aggKi, aggKd);
     }
@@ -226,11 +234,7 @@ void RoverArmMotor::tick()
     {
         internalPIDInstance->setPID(regKp, regKi, regKd);
     }
-    input = currentAngle; // range is R line
-    lastAngle = currentAngle;
-    //------------------Compute PID------------------//
-    // Compute distance, retune PID if necessary. Less aggressive tuning params for small errors
-    // Find the shortest from the current position to the set point
+    // Find the shortest from the current position to the setpoint.
     if (wrist_waist)
     {
         forwardDistance = (setpoint > input) ? setpoint - input : (angle_full_turn - input) + setpoint;

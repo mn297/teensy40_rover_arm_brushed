@@ -79,12 +79,12 @@ void print_motor(char *msg, void *pMotor)
 
 /*---------------------WRIST_ROLL_CYTRON---------------------*/
 #if TEST_WRIST_ROLL_CYTRON == 1
-RoverArmMotor Wrist_Roll(PWM1, DIR1, CS1, CYTRON, 0, 359.99f);
+RoverArmMotor Wrist_Roll(PWM1, DIR1, CS1, CYTRON, WRIST_ROLL_MIN_ANGLE, WRIST_ROLL_MAX_ANGLE);
 #endif
 
 /*---------------------WRIST_PITCH_CYTRON---------------------*/
 #if TEST_WRIST_PITCH_CYTRON == 1
-RoverArmMotor Wrist_Pitch(PWM2, DIR2, CS2, CYTRON, 0, 359.99f);
+RoverArmMotor Wrist_Pitch(PWM2, DIR2, CS2, CYTRON, WRIST_PITCH_MIN_ANGLE, WRIST_PITCH_MAX_ANGLE);
 #endif
 
 /*---------------------END_EFFECTOR_CYTRON---------------------*/
@@ -94,17 +94,17 @@ RoverArmMotor End_Effector(&hspi1, CYTRON_PWM_1, CYTRON_DIR_1, AMT22_1, CYTRON, 
 
 /*---------------------ELBOW_SERVO DECLARATIONS---------------------*/
 #if TEST_ELBOW_SERVO == 1
-RoverArmMotor Elbow(PWM1, -1, CS1, BLUE_ROBOTICS, 0, 359.99f);
+RoverArmMotor Elbow(PWM1, -1, CS1, BLUE_ROBOTICS, ELBOW_MIN_ANGLE, ELBOW_MAX_ANGLE);
 #endif
 
 /*---------------------SHOULDER_SERVO DECLARATIONS---------------------*/
 #if TEST_SHOULDER_SERVO == 1
-RoverArmMotor Shoulder(PWM2, -1, CS2, BLUE_ROBOTICS, 0, 359.99f);
+RoverArmMotor Shoulder(PWM2, -1, CS2, BLUE_ROBOTICS, SHOULDER_MIN_ANGLE, SHOULDER_MAX_ANGLE);
 #endif
 
 /*---------------------WAIST_SERVO DECLARATIONS---------------------*/
 #if TEST_WAIST_SERVO == 1
-RoverArmMotor Waist(&hspi1, SERVO_PWM_1, dummy_pin, AMT22_1, BLUE_ROBOTICS, 0, 359.99f);
+RoverArmMotor Waist(PWM2, -1, CS3, BLUE_ROBOTICS, WAIST_MIN_ANGLE, WAIST_MAX_ANGLE);
 #endif
 
 void rover_arm_timer_routine()
@@ -160,11 +160,7 @@ void rover_arm_setup(void)
     Wrist_Roll.stop_tick = 1;
     Wrist_Roll.begin(REG_KP_WRIST_ROLL, REG_KI_WRIST_ROLL, REG_KD_WRIST_ROLL,
                      REG_KP_WRIST_ROLL_AGG, REG_KI_WRIST_ROLL_AGG, REG_KD_WRIST_ROLL_AGG);
-#if SKIP_MASTERING == 1
-    Wrist_Roll.stop();
-    Wrist_Roll.set_current_as_zero_angle_sw();
     Wrist_Roll.newSetpoint(0.0);
-#endif
 #endif
 
     /*---WRIST_PITCH_CYTRON setup---*/
@@ -177,11 +173,8 @@ void rover_arm_setup(void)
     Wrist_Pitch.set_safety_pins(-1, LIMIT_WRIST_PITCH_MAX, LIMIT_WRIST_PITCH_MIN);
     Wrist_Pitch.begin(REG_KP_WRIST_PITCH, REG_KI_WRIST_PITCH, REG_KD_WRIST_PITCH,
                       REG_KP_WRIST_PITCH_AGG, REG_KI_WRIST_PITCH_AGG, REG_KD_WRIST_PITCH_AGG);
-#if SKIP_MASTERING == 1
-    Wrist_Pitch.stop();
-    Wrist_Pitch.set_current_as_zero_angle_sw();
+    Wrist_Pitch.set_current_as_zero_angle_sw(WRIST_PITCH_ZERO_ANGLE);
     Wrist_Pitch.newSetpoint(0.0);
-#endif
 #endif
 
     /*---END_EFFECTOR_CYTRON setup---*/

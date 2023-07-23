@@ -215,13 +215,13 @@ uint32_t get_turns_AMT22(uint16_t encoderPin, uint8_t resolution, TIM_HandleType
   return currentTurns;
 }
 
-void setZeroSPI(SPI_HandleTypeDef *hspi, GPIO_TypeDef *encoderPort, uint16_t encoderPin, TIM_HandleTypeDef *timer)
+void setZeroSPI(uint16_t encoderPin)
 {
   spiWriteRead(AMT22_NOP, encoderPin, 0);
 
   // There is also a minimum time after clocking that CS should remain asserted before we release it
   //  delay(timer, 3);
-  delayMicroseconds(3);
+  delayMicroseconds(AMT22_DELAY);
 
   spiWriteRead(AMT22_ZERO, encoderPin, 1);
 

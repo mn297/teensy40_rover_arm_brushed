@@ -1,14 +1,15 @@
 // META SETTINGS---------------------------------------------------------------
 #define USE_TEENSY 1
 #define IRQ_DEBUG_PRIORITY 10
-#define BRUSHED_ARM 0
-#define BRUSHLESS_ARM 1
+#define BRUSHED_ARM 1
+#define BRUSHLESS_ARM 0
 #define TICK 1
 
 // CONFIGURATION---------------------------------------------------------------
 #define TEST_ENCODER 0
 #define SKIP_MASTERING 0
 #define MASTERING 1
+#define MASTERING_TEST 1
 #define TEST_LOOP 1
 #define TEST_LIMIT_SWITCH 0
 
@@ -123,6 +124,7 @@
 #define REG_KD_WRIST_PITCH_AGG 0.05f
 #define WRIST_PITCH_MIN_ANGLE -75.0f
 #define WRIST_PITCH_MAX_ANGLE 75.0f
+#define WRIST_PITCH_ZERO_ANGLE 0
 #define WRIST_PITCH_GEAR_RATIO 1.0f
 
 // END_EFFECTOR_CYTRON
@@ -131,6 +133,7 @@
 #define REG_KD_END_EFFECTOR 0.0
 #define END_EFFECTOR_MIN_ANGLE MIN_FLOAT
 #define END_EFFECTOR_MAX_ANGLE MAX_FLOAT
+#define END_EFFECTOR_ZERO_ANGLE MAX_FLOAT
 #define END_EFFECTOR_GEAR_RATIO 1.0f
 
 // ELBOW_SERVO
@@ -142,6 +145,7 @@
 #define REG_KD_ELBOW_AGG 0.2f
 #define ELBOW_MIN_ANGLE -70.0f
 #define ELBOW_MAX_ANGLE 75.0f
+#define ELBOW_ZERO_ANGLE 0
 
 // SHOULDER_SERVO
 #define REG_KP_SHOULDER 0.5f
@@ -152,6 +156,7 @@
 #define REG_KD_SHOULDER_AGG 0.1f
 #define SHOULDER_MIN_ANGLE -60.0f
 #define SHOULDER_MAX_ANGLE 90.0f
+#define SHOULDER_ZERO_ANGLE 0
 
 // WAIST_SERVO
 #define REG_KP_WAIST 0.4f
@@ -162,6 +167,7 @@
 #define REG_KD_WAIST_AGG 0.1f
 #define WAIST_MIN_ANGLE -125.97f
 #define WAIST_MAX_ANGLE 118.76f
+#define WAIST_ZERO_ANGLE 0
 
 // FUNCTION PROTOTYPES----------------------------------------------------------
 void print_motor(char *msg, void *pMotor);

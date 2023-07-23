@@ -14,7 +14,6 @@
 // #pragma GCC optimize("O0")
 #endif
 
-
 // No additional #include statements are needed
 #define TICK 1
 
@@ -56,8 +55,12 @@ void DMA_Init(void)
   dmachannel1.enable();
 }
 #endif
+double mapFloat(float x, float in_min, float in_max, float out_min, float out_max)
+{
+  double result = ((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
 
-// The setup function runs once when you press reset or power the board
+  return result;
+}
 void setup()
 {
   // pinMode(ELBOW_BRAKE, OUTPUT);
@@ -69,12 +72,61 @@ void setup()
   halt_cpu(); // stop on startup; if not, Teensy keeps running and you
 #endif
 
-  rover_arm_setup();
+  // rover_arm_setup();
+
+#if MASTERING_TEST == 1
+  // Mastering test.
+  pinMode(CS1, OUTPUT);
+  SPI.begin();
+  SPI.setClockDivider(SPI_CLOCK_DIV64);
+  int error = -1;
+  int16_t result_arr[2];
+  while (error == -1)
+  {
+    error = getTurnCounterSPI(result_arr, CS1, 12); // timer not used, so nullptr
+    if (error)
+    {
+      Serial.printf("setup() ERROR: %d\r\n", error);
+      continue;
+    }
+    double angle_raw = mapFloat((float)result_arr[0], MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f); // mn297 potentiometer encoder
+    Serial.printf("setup() BEFORE angle: %.2f, turns: %d\r\n", angle_raw, (int)result_arr[1]);
+  }
+  setZeroSPI(CS1);
+  delay(1000);
+  // resetAMT22(CS1);
+  delay(1000);
+  error = -1;
+  while (error == -1)
+  {
+    error = getTurnCounterSPI(result_arr, CS1, 12); // timer not used, so nullptr
+    if (error == -1)
+    {
+      Serial.printf("setup() ERROR: %d\r\n", error);
+      continue;
+    }
+    double angle_raw = mapFloat((float)result_arr[0], MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f); // mn297 potentiometer encoder
+    Serial.printf("setup() AFTER angle: %.2f, turns: %d\r\n", angle_raw, (int)result_arr[1]);
+  }
+#endif
 }
 
-// the loop function runs over and over again forever
 void loop()
 {
+#if MASTERING_TEST == 1
+  // Mastering test.
+  int16_t result_arr[2];
+  delay(500);
+  int error = getTurnCounterSPI(result_arr, CS1, 12); // timer not used, so nullptr
+  if (error == -1)
+  {
+    Serial.printf("loop() ERROR: %d\r\n", error);
+    return;
+  }
+  double angle_raw = mapFloat((float)result_arr[0], MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f); // mn297 potentiometer encoder
+  Serial.printf("AFTER angle: %.2f, turns: %d\r\n", angle_raw, (int)result_arr[1]);
+#endif
+
   // Elbow.disengage_brake();
   // Serial.printf("Elbow disengage_brake\r\n");
   // delay(1000);
@@ -82,7 +134,7 @@ void loop()
   // Serial.printf("Elbow engage_brake\r\n");
   // delay(1000);
 #if TEST_LOOP == 1
-  rover_arm_loop();
+  // rover_arm_loop();
 #endif
 #if TEST_LIMIT_SWITCH == 1
   test_limit_switches();
@@ -141,10 +193,10 @@ void serialEvent()
     Serial.printf("End_Effector newSetpoint at %lf result: %d\r\n", param3, result3);
 #endif
 #if TEST_ELBOW_SERVO == 1
-    Serial.printf("Elbow newSetpoint at %lf result: %d\r\n", param1 , result4);
+    Serial.printf("Elbow newSetpoint at %lf result: %d\r\n", param1, result4);
 #endif
 #if TEST_SHOULDER_SERVO == 1
-    Serial.printf("Shoulder newSetpoint at %lf result: %d\r\n", param1 , result5);
+    Serial.printf("Shoulder newSetpoint at %lf result: %d\r\n", param1, result5);
 #endif
   }
 }
