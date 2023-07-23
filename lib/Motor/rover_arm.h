@@ -130,8 +130,8 @@
 #define REG_KP_WRIST_PITCH_AGG 0.08f
 #define REG_KI_WRIST_PITCH_AGG 0.05f
 #define REG_KD_WRIST_PITCH_AGG 0.05f
-#define WRIST_PITCH_MIN_ANGLE 0.0f
-#define WRIST_PITCH_MAX_ANGLE 120.0f
+#define WRIST_PITCH_MIN_ANGLE -75.0f
+#define WRIST_PITCH_MAX_ANGLE 75.0f
 #define WRIST_PITCH_GEAR_RATIO 1.0f
 
 // END_EFFECTOR_CYTRON
@@ -149,8 +149,8 @@
 #define REG_KP_ELBOW_AGG 0.5f
 #define REG_KI_ELBOW_AGG 0.2f
 #define REG_KD_ELBOW_AGG 0.2f
-#define ELBOW_MIN_ANGLE 0
-#define ELBOW_MAX_ANGLE 240.0f
+#define ELBOW_MIN_ANGLE -70.0f
+#define ELBOW_MAX_ANGLE 75.0f
 
 // SHOULDER_SERVO
 // #define REG_KP_SHOULDER 0.35f
@@ -160,15 +160,15 @@
 #define REG_KP_SHOULDER_AGG 0.6f
 #define REG_KI_SHOULDER_AGG 0.1f
 #define REG_KD_SHOULDER_AGG 0.1f
-#define SHOULDER_MIN_ANGLE 0
-#define SHOULDER_MAX_ANGLE 25.0f
+#define SHOULDER_MIN_ANGLE -60.0f
+#define SHOULDER_MAX_ANGLE 90.0f
 
 // WAIST_SERVO
-#define REG_KP_WAIST 1.8
-#define REG_KI_WAIST 1.0
-#define REG_KD_WAIST 0.5
-#define WAIST_MIN_ANGLE MIN_FLOAT
-#define WAIST_MAX_ANGLE MAX_FLOAT
+#define REG_KP_WAIST 0.4f
+#define REG_KI_WAIST 0.1f
+#define REG_KD_WAIST 0.1f
+#define WAIST_MIN_ANGLE -125.97f
+#define WAIST_MAX_ANGLE 118.76f
 
 // FUNCTION PROTOTYPES----------------------------------------------------------
 void print_motor(char *msg, void *pMotor);

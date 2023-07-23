@@ -34,7 +34,9 @@ public:
     void setAngleLimits(double lowest_angle, double highest_angle);
     void set_zero_angle();               // unused
     void set_current_as_zero_angle_sw(); // mn297 software zero angle
+    void set_current_as_zero_angle_sw(double angle);
     void set_current_as_max_angle_sw();  // mn297 software zero angle
+    void set_current_as_angle_sw(double angle);
     void set_max_angle_sw();
 
     uint32_t get_turns_encoder(); // mn297

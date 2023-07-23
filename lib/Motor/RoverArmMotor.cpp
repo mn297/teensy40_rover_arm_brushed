@@ -198,8 +198,8 @@ void RoverArmMotor::tick()
         encoder_error = 0;
     }
 
-    //------------------remove jitter------------------//
-    // If the change in angle is less than the threshold, return early
+    //------------------Remove jitter------------------//
+    // If the change in angle is less than the threshold, return early.
     double diff;
     if (wrist_waist)
     {
@@ -222,7 +222,9 @@ void RoverArmMotor::tick()
     if (diff > 30.0)
     {
         internalPIDInstance->setPID(aggKp, aggKi, aggKd);
-    } else {
+    }
+    else
+    {
         internalPIDInstance->setPID(regKp, regKi, regKd);
     }
     input = currentAngle; // range is R line
@@ -234,7 +236,7 @@ void RoverArmMotor::tick()
     {
         forwardDistance = (setpoint > input) ? setpoint - input : (angle_full_turn - input) + setpoint;
         backwardDistance = (setpoint > input) ? (angle_full_turn - setpoint) + input : input - setpoint;
-        // GO BACKWARDS CW
+        // GO BACKWARDS CW.
         if (backwardDistance < forwardDistance - 10.0) // handle hysterisis
         {
             if (setpoint > input)
@@ -252,7 +254,7 @@ void RoverArmMotor::tick()
 #endif
             }
         }
-        // GO FORWARDS CCW
+        // GO FORWARDS CCW.
         else
         {
             if (setpoint > input)
@@ -316,7 +318,7 @@ void RoverArmMotor::tick()
         }
         else if ((temp_output > DEADBAND_SERVO - 10.0f) && (temp_output <= DEADBAND_SERVO))
         {
-            // Enhance output
+            // Enhance output.
             if (output > 0)
             {
                 temp_output = (output + DEADBAND_SERVO / 2);
@@ -503,11 +505,24 @@ void RoverArmMotor::set_current_as_zero_angle_sw()
     return;
 }
 
+void RoverArmMotor::set_current_as_zero_angle_sw(double angle)
+{
+    zero_angle_sw = angle;
+    return;
+}
+
 void RoverArmMotor::set_current_as_max_angle_sw()
 {
     double temp = 0;
     this->get_current_angle_multi(&temp);
     zero_angle_sw = temp - highestAngle;
+}
+
+void RoverArmMotor::set_current_as_angle_sw(double angle)
+{
+    double temp = 0;
+    this->get_current_angle_multi(&temp);
+    zero_angle_sw = temp - angle;
 }
 
 uint32_t RoverArmMotor::get_turns_encoder()
