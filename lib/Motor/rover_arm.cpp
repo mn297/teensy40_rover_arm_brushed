@@ -451,18 +451,18 @@ void limit_elbow_min_int()
 }
 #endif
 
-#if TEST_SHOULDER_SERVO == 1
-void limit_shoulder_max_int()
+#if TEST_WAIST_SERVO == 1
+void limit_waist_max_int()
 {
     unsigned long now = millis();
     if (now - last_trigger_time_end_effector_max > DEBOUNCE_DELAY)
     {
         last_trigger_time_end_effector_max = now;
-        if (digitalRead(LIMIT_SHOULDER_MAX) == LOW)
+        if (digitalRead(LIMIT_WAIST_MAX) == LOW)
         {
             limit_end_effector_max_activated = 1;
-            Serial.println("Shoulder max limit reached");
-            Shoulder.stop();
+            Serial.println("Waist max limit reached");
+            Waist.stop();
         }
         else
         {
@@ -471,17 +471,17 @@ void limit_shoulder_max_int()
     }
 }
 
-void limit_shoulder_min_int()
+void limit_waist_min_int()
 {
     unsigned long now = millis();
     if (now - last_trigger_time_end_effector_min > DEBOUNCE_DELAY)
     {
         last_trigger_time_end_effector_min = now;
-        if (digitalRead(LIMIT_SHOULDER_MIN) == LOW)
+        if (digitalRead(LIMIT_WAIST_MIN) == LOW)
         {
             limit_end_effector_min_activated = 1;
-            Serial.println("Shoulder min limit reached");
-            Shoulder.stop();
+            Serial.println("Waist min limit reached");
+            Waist.stop();
         }
         else
         {
@@ -508,8 +508,8 @@ void attach_all_interrupts()
     attachInterrupt(digitalPinToInterrupt(LIMIT_ELBOW_MIN), limit_elbow_min_int, CHANGE);
 #endif
 
-#if TEST_SHOULDER_SERVO == 1
-    attachInterrupt(digitalPinToInterrupt(LIMIT_SHOULDER_MAX), limit_shoulder_max_int, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(LIMIT_SHOULDER_MIN), limit_shoulder_min_int, CHANGE);
+#if TEST_WAIST_SERVO == 1
+    attachInterrupt(digitalPinToInterrupt(LIMIT_WAIST_MAX), limit_waist_max_int, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(LIMIT_WAIST_MIN), limit_waist_min_int, CHANGE);
 #endif
 }
