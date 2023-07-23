@@ -23,7 +23,7 @@ public:
 #define MIN_ADC_VALUE 0    // 200
 
     RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_type,
-                  double minimum_angle, double maximum_angle, int limit_pin_max = -1, int limit_pin_min = -1);
+                  double minimum_angle, double maximum_angle);
 
     // Setters for various tunable parameters of our motors
     void set_PID_params(double regP, double regI, double regD); // mn297
@@ -44,8 +44,8 @@ public:
 
     void setPIDOutputLimits(double lower_end, double upper_end);
     void setMovingAverageWindowSize(int size);
-    void disengageBrake();
-    void engageBrake();
+    void disengage_brake();
+    void engage_brake();
 
     double get_current_angle_avg(); // mn297
     double get_current_angle();     // mn297
@@ -66,6 +66,7 @@ public:
     void set_gear_ratio(double ratio);
     int get_turn_count(); // mn297
     void set_limit_pins(int limit_pin_max, int limit_pin_min);
+    void set_safety_pins(int brake_pin, int limit_pin_max, int limit_pin_min);
 
 private:
 public: // TESTING only
@@ -78,6 +79,7 @@ public: // TESTING only
 
     // PINS
     int _pwm, _dir, _encoder, _limit_switch;
+    int _brake_pin;
     int _limit_pin_max;
     int _limit_pin_min;
 

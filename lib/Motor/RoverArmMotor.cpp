@@ -26,7 +26,7 @@
  * @retval None
  */
 RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_type,
-                             double minimum_angle, double maximum_angle, int limit_pin_max = -1, int limit_pin_min = -1)
+                             double minimum_angle, double maximum_angle)
 {
     _pwm = pwm_pin;
     _dir = dir_pin;
@@ -50,19 +50,28 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
     encoder_error = 0;
     stop_tick = 0;
 
-    _limit_pin_max = limit_pin_max;
-    _limit_pin_min = limit_pin_min;
+    _brake_pin = -1;
+    _limit_pin_max = -1;
+    _limit_pin_min = -1;
 
     angle_full_turn = 360.0f;
 }
 
 void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, double aggI, double aggD)
 {
+    regKp = regP;
+    regKi = regI;
+    regKd = regD;
+    aggKp = aggP;
+    aggKi = aggI;
+    aggKd = aggD;
     Serial.println("RoverArmMotor::begin()");
+    Serial.printf("RoverArmMotor::begin() _brake_pin: %d\r\n", _brake_pin);
     /*------------------Set pin modes------------------*/
     pinMode(_pwm, OUTPUT);
     pinMode(_dir, OUTPUT);
     pinMode(_encoder, OUTPUT);
+    pinMode(_brake_pin, OUTPUT);
     if (_limit_pin_max != -1 && _limit_pin_min != -1)
     {
         pinMode(_limit_pin_max, INPUT_PULLUP);
@@ -115,9 +124,9 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     regKi = regI;
     regKd = regD;
 
-    // if(brake)  engageBrake(); //use brake if there is one
+    // if(brake)  engage_brake(); //use brake if there is one
     if (_limit_switch != -1)
-        engageBrake(); // use brake if there is one
+        engage_brake(); // use brake if there is one
     Serial.println("RoverArmMotor::begin() 6");
 
     /*------------------Reverse to hit zero angle------------------*/
@@ -139,6 +148,7 @@ void RoverArmMotor::tick()
 {
     if (stop_tick)
     {
+        this->engage_brake();
         this->stop(); // stop the motor
     }
 /*------------------Check limit pins------------------*/
@@ -205,18 +215,18 @@ void RoverArmMotor::tick()
         Serial.println("RoverArmMotor::tick() diff < 0.5");
 #endif
         output = 0;
+        this->engage_brake();
         this->stop(); // stop the motor
         return;
     }
-    // if (diff > 30.0)
-    // {
-    //     internalPIDInstance->setPID(aggKp, aggKi, aggKd);
-    // } else {
-    //     internalPIDInstance->setPID(regKp, regKi, regKd);
-    // }
+    if (diff > 30.0)
+    {
+        internalPIDInstance->setPID(aggKp, aggKi, aggKd);
+    } else {
+        internalPIDInstance->setPID(regKp, regKi, regKd);
+    }
     input = currentAngle; // range is R line
     lastAngle = currentAngle;
-
     //------------------Compute PID------------------//
     // Compute distance, retune PID if necessary. Less aggressive tuning params for small errors
     // Find the shortest from the current position to the set point
@@ -300,9 +310,21 @@ void RoverArmMotor::tick()
     {
         //------------------DEADBAND------------------//
         double temp_output = abs(output);
-        if (temp_output <= DEADBAND_SERVO)
+        if (temp_output <= DEADBAND_SERVO - 10.0f)
         {
             temp_output = 0;
+        }
+        else if ((temp_output > DEADBAND_SERVO - 10.0f) && (temp_output <= DEADBAND_SERVO))
+        {
+            // Enhance output
+            if (output > 0)
+            {
+                temp_output = (output + DEADBAND_SERVO / 2);
+            }
+            else
+            {
+                temp_output = (output - DEADBAND_SERVO / 2);
+            }
         }
         else
         {
@@ -315,6 +337,7 @@ void RoverArmMotor::tick()
             //     temp_output = (output - deadband / 2);
             // }
         }
+        this->disengage_brake();
         volatile double output_actual = (1500.0f - 1.0f + output) * 100.0f / 2500.0f;
         pwmInstance->setPWM(_pwm, _pwm_freq, output_actual);
         return;
@@ -338,6 +361,7 @@ int RoverArmMotor::forward(int percentage_speed)
     else if (escType == BLUE_ROBOTICS)
     {
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 1499 + 350 * percentage_speed / 100);
+        this->disengage_brake();
         double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE + (BLUE_ROBOTICS_STOP_DUTY_CYCLE * percentage_speed / 100); // TODEBUG
         pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
         return 0;
@@ -361,6 +385,7 @@ int RoverArmMotor::reverse(int percentage_speed)
     else if (escType == BLUE_ROBOTICS)
     {
         // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 1499 - 350 * percentage_speed / 100);
+        this->disengage_brake();
         double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE - (BLUE_ROBOTICS_STOP_DUTY_CYCLE * percentage_speed / 100);
         pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
         return 0;
@@ -397,7 +422,7 @@ void RoverArmMotor::set_PID_params(double regP, double regI, double regD)
     regKp = regP;
     regKi = regI;
     regKd = regD;
-    
+
     return;
 }
 
@@ -491,20 +516,26 @@ uint32_t RoverArmMotor::get_turns_encoder()
     return turns;
 }
 
-void RoverArmMotor::disengageBrake() // TODO
+void RoverArmMotor::disengage_brake()
 {
-    if (_limit_switch != -1)
+    // Serial.printf("RoverArmMotor::disengage_brake(), %d\r\n", _brake_pin);
+    if (_brake_pin != -1)
     {
-        // HAL_GPIO_WritePin(limit_switch.port, limit_switch.pin, GPIO_PIN_RESET); // mn297
+        digitalWrite(_brake_pin, HIGH);
+        return;
     }
+    return;
 }
 
-void RoverArmMotor::engageBrake() // TODO
+void RoverArmMotor::engage_brake()
 {
-    if (_limit_switch != -1)
+    // Serial.printf("RoverArmMotor::engage_brake(), %d\r\n", _brake_pin);
+    if (_brake_pin != -1)
     {
-        // HAL_GPIO_WritePin(limit_switch.port, limit_switch.pin, GPIO_PIN_SET); // mn297
+        digitalWrite(_brake_pin, LOW);
+        return;
     }
+    return;
 }
 
 // double RoverArmMotor::get_current_angle_avg()
@@ -609,6 +640,15 @@ void RoverArmMotor::set_limit_pins(int limit_pin_max, int limit_pin_min)
 {
     _limit_pin_max = limit_pin_max;
     _limit_pin_min = limit_pin_min;
+    pinMode(_limit_pin_max, INPUT_PULLUP);
+    pinMode(_limit_pin_min, INPUT_PULLUP);
+}
+void RoverArmMotor::set_safety_pins(int brake_pin, int limit_pin_max, int limit_pin_min)
+{
+    _brake_pin = brake_pin;
+    _limit_pin_max = limit_pin_max;
+    _limit_pin_min = limit_pin_min;
+    pinMode(_brake_pin, OUTPUT);
     pinMode(_limit_pin_max, INPUT_PULLUP);
     pinMode(_limit_pin_min, INPUT_PULLUP);
 }

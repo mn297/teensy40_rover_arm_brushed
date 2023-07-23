@@ -84,7 +84,7 @@ RoverArmMotor Wrist_Roll(PWM1, DIR1, CS1, CYTRON, 0, 359.99f);
 
 /*---------------------WRIST_PITCH_CYTRON---------------------*/
 #if TEST_WRIST_PITCH_CYTRON == 1
-RoverArmMotor Wrist_Pitch(PWM2, DIR2, CS2, CYTRON, 0, 359.99f, LIMIT_WRIST_PITCH_MAX, LIMIT_WRIST_PITCH_MIN);
+RoverArmMotor Wrist_Pitch(PWM2, DIR2, CS2, CYTRON, 0, 359.99f);
 #endif
 
 /*---------------------END_EFFECTOR_CYTRON---------------------*/
@@ -99,7 +99,7 @@ RoverArmMotor Elbow(PWM1, -1, CS1, BLUE_ROBOTICS, 0, 359.99f);
 
 /*---------------------SHOULDER_SERVO DECLARATIONS---------------------*/
 #if TEST_SHOULDER_SERVO == 1
-RoverArmMotor Shoulder(&hspi1, SERVO_PWM_1, dummy_pin, AMT22_1, BLUE_ROBOTICS, 0, 359.99f);
+RoverArmMotor Shoulder(PWM2, -1, CS2, BLUE_ROBOTICS, 0, 359.99f);
 #endif
 
 /*---------------------WAIST_SERVO DECLARATIONS---------------------*/
@@ -119,7 +119,7 @@ void rover_arm_timer_routine()
     }
     spiLock = true;
     interrupts();
-
+#if TICK == 1
 #if TEST_WRIST_ROLL_CYTRON == 1
     Wrist_Roll.tick();
 #endif
@@ -138,7 +138,7 @@ void rover_arm_timer_routine()
 #if TEST_WAIST_SERVO == 1
     Waist.tick();
 #endif
-
+#endif
     spiLock = false;
     tickRequest = false;
 }
@@ -174,6 +174,7 @@ void rover_arm_setup(void)
     Wrist_Pitch.setAngleLimits(WRIST_PITCH_MIN_ANGLE, WRIST_PITCH_MAX_ANGLE);
     Wrist_Pitch.reset_encoder();
     Wrist_Pitch.stop_tick = 1;
+    Wrist_Pitch.set_safety_pins(-1, LIMIT_WRIST_PITCH_MAX, LIMIT_WRIST_PITCH_MIN);
     Wrist_Pitch.begin(REG_KP_WRIST_PITCH, REG_KI_WRIST_PITCH, REG_KD_WRIST_PITCH,
                       REG_KP_WRIST_PITCH_AGG, REG_KI_WRIST_PITCH_AGG, REG_KD_WRIST_PITCH_AGG);
 #if SIMULATE_LIMIT_SWITCH == 1
@@ -201,13 +202,28 @@ void rover_arm_setup(void)
 #if TEST_ELBOW_SERVO == 1
     Elbow.setAngleLimits(ELBOW_MIN_ANGLE, ELBOW_MAX_ANGLE);
     Elbow.reset_encoder();
-    Elbow.begin(REG_KP_ELBOW, REG_KI_ELBOW, REG_KD_ELBOW);
+    Elbow.set_safety_pins(ELBOW_BRAKE, LIMIT_ELBOW_MAX, LIMIT_ELBOW_MIN);
+    Elbow.begin(REG_KP_ELBOW, REG_KI_ELBOW, REG_KD_ELBOW, REG_KP_ELBOW_AGG, REG_KI_ELBOW_AGG, REG_KD_ELBOW_AGG);
 #if SIMULATE_LIMIT_SWITCH == 1
     Elbow.stop();
     Elbow.set_current_as_zero_angle_sw();
     Elbow.newSetpoint(0.0);
 #endif
 #endif
+
+    /* SHOULDER_SERVO setup */
+#if TEST_SHOULDER_SERVO == 1
+    Shoulder.setAngleLimits(SHOULDER_MIN_ANGLE, SHOULDER_MAX_ANGLE);
+    Shoulder.reset_encoder();
+    Shoulder.set_safety_pins(SHOULDER_BRAKE, -1, -1);
+    Shoulder.begin(REG_KP_SHOULDER, REG_KI_SHOULDER, REG_KD_SHOULDER, REG_KP_SHOULDER_AGG, REG_KI_SHOULDER_AGG, REG_KD_SHOULDER_AGG);
+#if SIMULATE_LIMIT_SWITCH == 1
+    Shoulder.stop();
+    Shoulder.set_current_as_zero_angle_sw();
+    Shoulder.newSetpoint(0.0);
+#endif
+#endif
+
     /*---WAIST_SERVO setup---*/
 #if TEST_WAIST_SERVO == 1
     Waist.wrist_waist = 1;
@@ -264,13 +280,18 @@ void rover_arm_loop()
         print_motor("SP END_EFFECTOR_CYTRON", &End_Effector);
 #endif
 
+#if TEST_ELBOW_SERVO == 1
+        print_motor("SP Elbow", &Elbow);
+#endif
+
+#if TEST_SHOULDER_SERVO == 1
+        print_motor("SP Shoulder", &Shoulder);
+#endif
+
 #if TEST_WAIST_SERVO == 1
         print_motor("SP Waist", &Waist);
 #endif
 
-#if TEST_ELBOW_SERVO == 1
-        print_motor("SP Elbow", &Elbow);
-#endif
 #endif
         lastPrint = currentMillis; // Update the lastPrint time
         Serial.println();

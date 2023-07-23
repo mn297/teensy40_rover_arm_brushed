@@ -39,7 +39,7 @@ public:
     double calculate(double setpoint, double pv);
     void setPID(double Kp, double Kd, double Ki);
 
-private:
+// private:
     double _dt;
     double _max;
     double _min;
@@ -64,7 +64,9 @@ PID::~PID()
 }
 void PID::setPID(double Kp, double Kd, double Ki)
 {
-    pimpl->setPID(Kp, Kd, Ki);
+    pimpl->_Kp = Kp;
+    pimpl->_Kd = Kd;
+    pimpl->_Ki = Ki;
 }
 
 /**

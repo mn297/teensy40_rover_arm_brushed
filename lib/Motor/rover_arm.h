@@ -1,8 +1,9 @@
 // META SETTINGS---------------------------------------------------------------
 #define USE_TEENSY 1
 #define IRQ_DEBUG_PRIORITY 10
-#define BRUSHED_ARM 1
-#define BRUSHLESS_ARM 0
+#define BRUSHED_ARM 0
+#define BRUSHLESS_ARM 1
+#define TICK 1
 
 // TEENSY PINS------------------------------------------------------------------
 #ifdef USE_TEENSY
@@ -53,7 +54,12 @@
 #define NO4 19
 
 #define ELBOW_BRAKE 14
-#define WAIST_BRAKE 15
+#define SHOULDER_BRAKE 15
+
+#define LIMIT_ELBOW_MAX NO1
+#define LIMIT_ELBOW_MIN NO2
+#define LIMIT_WAIST_MAX NO3
+#define LIMIT_WAIST_MIN NO4
 #endif
 
 #define PID_PERIOD_US 2000
@@ -81,7 +87,7 @@
 #endif
 
 #if BRUSHLESS_ARM == 1
-#define TEST_ELBOW_SERVO 0
+#define TEST_ELBOW_SERVO 1
 #define TEST_SHOULDER_SERVO 1
 #define TEST_WAIST_SERVO 0
 #endif
@@ -129,7 +135,7 @@
 #define WRIST_PITCH_GEAR_RATIO 1.0f
 
 // END_EFFECTOR_CYTRON
-#define REG_KP_END_EFFECTOR 0.4
+#define REG_KP_END_EFFECTOR 0.4f
 #define REG_KI_END_EFFECTOR 0.0
 #define REG_KD_END_EFFECTOR 0.0
 #define END_EFFECTOR_MIN_ANGLE MIN_FLOAT
@@ -137,18 +143,25 @@
 #define END_EFFECTOR_GEAR_RATIO 1.0f
 
 // ELBOW_SERVO
-#define REG_KP_ELBOW 0.3
-#define REG_KI_ELBOW 0.2
-#define REG_KD_ELBOW 0.2
+#define REG_KP_ELBOW 0.3f
+#define REG_KI_ELBOW 0.2f
+#define REG_KD_ELBOW 0.2f
+#define REG_KP_ELBOW_AGG 0.5f
+#define REG_KI_ELBOW_AGG 0.2f
+#define REG_KD_ELBOW_AGG 0.2f
 #define ELBOW_MIN_ANGLE 0
 #define ELBOW_MAX_ANGLE 240.0f
 
 // SHOULDER_SERVO
-#define REG_KP_SHOULDER 0.2
-#define REG_KI_SHOULDER 0
-#define REG_KD_SHOULDER 0
+// #define REG_KP_SHOULDER 0.35f
+#define REG_KP_SHOULDER 0.5f
+#define REG_KI_SHOULDER 0.2f
+#define REG_KD_SHOULDER 0.1f
+#define REG_KP_SHOULDER_AGG 0.6f
+#define REG_KI_SHOULDER_AGG 0.1f
+#define REG_KD_SHOULDER_AGG 0.1f
 #define SHOULDER_MIN_ANGLE 0
-#define SHOULDER_MAX_ANGLE 15.0f
+#define SHOULDER_MAX_ANGLE 25.0f
 
 // WAIST_SERVO
 #define REG_KP_WAIST 1.8

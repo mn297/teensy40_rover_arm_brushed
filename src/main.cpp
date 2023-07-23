@@ -25,6 +25,7 @@ extern RoverArmMotor Wrist_Roll;
 extern RoverArmMotor Wrist_Pitch;
 extern RoverArmMotor End_Effector;
 extern RoverArmMotor Elbow;
+extern RoverArmMotor Shoulder;
 
 #if USE_DMA == 1
 DMAChannel dmachannel1;
@@ -59,6 +60,7 @@ void DMA_Init(void)
 // The setup function runs once when you press reset or power the board
 void setup()
 {
+  // pinMode(ELBOW_BRAKE, OUTPUT);
   Serial.begin(115200);
   while (!Serial)
     ;
@@ -73,6 +75,12 @@ void setup()
 // the loop function runs over and over again forever
 void loop()
 {
+  // Elbow.disengage_brake();
+  // Serial.printf("Elbow disengage_brake\r\n");
+  // delay(1000);
+  // Elbow.engage_brake();
+  // Serial.printf("Elbow engage_brake\r\n");
+  // delay(1000);
 #if TEST_LOOP == 1
   rover_arm_loop();
 #endif
@@ -118,6 +126,9 @@ void serialEvent()
 #if TEST_ELBOW_SERVO == 1
     bool result4 = Elbow.newSetpoint(param1);
 #endif
+#if TEST_SHOULDER_SERVO == 1
+    bool result5 = Shoulder.newSetpoint(param1);
+#endif
 
     // Print status.
 #if TEST_WRIST_ROLL_CYTRON == 1
@@ -131,6 +142,9 @@ void serialEvent()
 #endif
 #if TEST_ELBOW_SERVO == 1
     Serial.printf("Elbow newSetpoint at %lf result: %d\r\n", param1 , result4);
+#endif
+#if TEST_SHOULDER_SERVO == 1
+    Serial.printf("Shoulder newSetpoint at %lf result: %d\r\n", param1 , result5);
 #endif
   }
 }
