@@ -33,8 +33,8 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
     _encoder = encoder_pin;
 
     escType = esc_type;
-    lowestAngle = minimum_angle;
-    highestAngle = maximum_angle;
+    min_angle = minimum_angle;
+    max_angle = maximum_angle;
 
     _pwm_freq = 400;
 
@@ -83,7 +83,7 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     Serial.println("RoverArmMotor::begin() 2");
 
     /*------------------Initialize timers------------------*/
-    delay(300 * DELAY_FACTOR);                // wait for the motor to start up
+    delay(250 * DELAY_FACTOR);                // wait for the motor to start up
     this->stop();                             // stop the motor
     delay(250 * DELAY_FACTOR);                // wait for the motor to start up
     this->stop();                             // stop the motor
@@ -129,15 +129,14 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
         engage_brake(); // use brake if there is one
     Serial.println("RoverArmMotor::begin() 6");
 
-    /*------------------Reverse to hit zero angle------------------*/
-    delay(300 * DELAY_FACTOR); // wait for the motor to start up
+    /*------------------Mastering------------------*/
+    Serial.println("RoverArmMotor::begin() 7 Mastering");
+    delay(250 * DELAY_FACTOR); // wait for the motor to start up
     this->reverse();
-    Serial.println("RoverArmMotor::begin() 7");
-    delay(300 * DELAY_FACTOR); // wait for the motor to start up
+    delay(250 * DELAY_FACTOR); // wait for the motor to start up
     this->reverse();
     Serial.println("RoverArmMotor::begin() 8");
     return;
-    Serial.println("RoverArmMotor::begin() 8");
 }
 
 int positive_rezeros = 0;
@@ -279,7 +278,7 @@ void RoverArmMotor::tick()
     }
 
     //------------------SAFETY------------------//
-    //    if (currentAngle >= (highestAngle - 2) || currentAngle <= (lowestAngle + 2))
+    //    if (currentAngle >= (max_angle - 2) || currentAngle <= (min_angle + 2))
     //        output = 0.0;
 
     //------------------Write to motor------------------//
@@ -362,7 +361,6 @@ int RoverArmMotor::forward(int percentage_speed)
     }
     else if (escType == BLUE_ROBOTICS)
     {
-        // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 1499 + 350 * percentage_speed / 100);
         this->disengage_brake();
         double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE + (BLUE_ROBOTICS_STOP_DUTY_CYCLE * percentage_speed / 100); // TODEBUG
         pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
@@ -386,7 +384,6 @@ int RoverArmMotor::reverse(int percentage_speed)
     }
     else if (escType == BLUE_ROBOTICS)
     {
-        // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 1499 - 350 * percentage_speed / 100);
         this->disengage_brake();
         double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE - (BLUE_ROBOTICS_STOP_DUTY_CYCLE * percentage_speed / 100);
         pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
@@ -399,7 +396,6 @@ void RoverArmMotor::stop()
 {
     if (escType == CYTRON)
     {
-        // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 0);
 #if DEBUG_ROVER_ARM_MOTOR == 1
         Serial.println("RoverArmMotor::stop() CYTRON");
 #endif
@@ -411,7 +407,6 @@ void RoverArmMotor::stop()
 #if DEBUG_ROVER_ARM_MOTOR == 1
         Serial.println("RoverArmMotor::stop() SERVO");
 #endif
-        // __HAL_TIM_SET_COMPARE(pwm.p_tim, pwm.tim_channel, 1499);
         pwmInstance->setPWM(_pwm, _pwm_freq, BLUE_ROBOTICS_STOP_DUTY_CYCLE);
         return;
     }
@@ -456,7 +451,7 @@ bool RoverArmMotor::newSetpoint(double angle)
             temp_setpoint += angle_full_turn;
         }
     }
-    if (temp_setpoint >= lowestAngle && temp_setpoint <= highestAngle)
+    if (temp_setpoint >= min_angle && temp_setpoint <= max_angle)
     {
         setpoint = temp_setpoint;
         return true;
@@ -483,8 +478,8 @@ void RoverArmMotor::set_gear_ratio(double ratio)
 
 void RoverArmMotor::setAngleLimits(double lowest, double highest)
 {
-    lowestAngle = lowest * gear_ratio;
-    highestAngle = highest * gear_ratio;
+    min_angle = lowest * gear_ratio;
+    max_angle = highest * gear_ratio;
     return;
 }
 
@@ -513,9 +508,7 @@ void RoverArmMotor::set_current_as_zero_angle_sw(double angle)
 
 void RoverArmMotor::set_current_as_max_angle_sw()
 {
-    double temp = 0;
-    this->get_current_angle_multi(&temp);
-    zero_angle_sw = temp - highestAngle;
+    set_current_as_angle_sw(max_angle);
 }
 
 void RoverArmMotor::set_current_as_angle_sw(double angle)

@@ -156,11 +156,11 @@ void rover_arm_setup(void)
     Wrist_Roll.set_gear_ratio(WRIST_ROLL_GEAR_RATIO);
     // Wrist_Roll.set_gear_ratio(1);
     Wrist_Roll.setAngleLimits(WRIST_ROLL_MIN_ANGLE, WRIST_ROLL_MAX_ANGLE);
-    Wrist_Roll.reset_encoder();
+    // Wrist_Roll.reset_encoder();
     Wrist_Roll.stop_tick = 1;
     Wrist_Roll.begin(REG_KP_WRIST_ROLL, REG_KI_WRIST_ROLL, REG_KD_WRIST_ROLL,
                      REG_KP_WRIST_ROLL_AGG, REG_KI_WRIST_ROLL_AGG, REG_KD_WRIST_ROLL_AGG);
-#if SIMULATE_LIMIT_SWITCH == 1
+#if SKIP_MASTERING == 1
     Wrist_Roll.stop();
     Wrist_Roll.set_current_as_zero_angle_sw();
     Wrist_Roll.newSetpoint(0.0);
@@ -172,12 +172,12 @@ void rover_arm_setup(void)
     Wrist_Pitch.wrist_waist = 0;
     Wrist_Pitch.set_gear_ratio(WRIST_PITCH_GEAR_RATIO);
     Wrist_Pitch.setAngleLimits(WRIST_PITCH_MIN_ANGLE, WRIST_PITCH_MAX_ANGLE);
-    Wrist_Pitch.reset_encoder();
+    // Wrist_Pitch.reset_encoder();
     Wrist_Pitch.stop_tick = 1;
     Wrist_Pitch.set_safety_pins(-1, LIMIT_WRIST_PITCH_MAX, LIMIT_WRIST_PITCH_MIN);
     Wrist_Pitch.begin(REG_KP_WRIST_PITCH, REG_KI_WRIST_PITCH, REG_KD_WRIST_PITCH,
                       REG_KP_WRIST_PITCH_AGG, REG_KI_WRIST_PITCH_AGG, REG_KD_WRIST_PITCH_AGG);
-#if SIMULATE_LIMIT_SWITCH == 1
+#if SKIP_MASTERING == 1
     Wrist_Pitch.stop();
     Wrist_Pitch.set_current_as_zero_angle_sw();
     Wrist_Pitch.newSetpoint(0.0);
@@ -188,10 +188,10 @@ void rover_arm_setup(void)
 #if TEST_END_EFFECTOR_CYTRON == 1
     End_Effector.wrist_waist = 0;
     End_Effector.setAngleLimits(MIN_FLOAT, MAX_FLOAT);
-    End_Effector.reset_encoder();
+    // End_Effector.reset_encoder();
     End_Effector.begin(regKp_end_effector, regKi_end_effector, regKd_end_effector);
     End_Effector.reverse(100);
-#if SIMULATE_LIMIT_SWITCH == 1
+#if SKIP_MASTERING == 1
     End_Effector.stop();
     End_Effector.set_current_as_zero_angle_sw();
     End_Effector.newSetpoint(0.0);
@@ -201,10 +201,10 @@ void rover_arm_setup(void)
     /* ELBOW_SERVO setup */
 #if TEST_ELBOW_SERVO == 1
     Elbow.setAngleLimits(ELBOW_MIN_ANGLE, ELBOW_MAX_ANGLE);
-    Elbow.reset_encoder();
+    // Elbow.reset_encoder();
     Elbow.set_safety_pins(ELBOW_BRAKE, LIMIT_ELBOW_MAX, LIMIT_ELBOW_MIN);
     Elbow.begin(REG_KP_ELBOW, REG_KI_ELBOW, REG_KD_ELBOW, REG_KP_ELBOW_AGG, REG_KI_ELBOW_AGG, REG_KD_ELBOW_AGG);
-#if SIMULATE_LIMIT_SWITCH == 1
+#if SKIP_MASTERING == 1
     Elbow.stop();
     Elbow.set_current_as_zero_angle_sw();
     Elbow.newSetpoint(0.0);
@@ -214,10 +214,10 @@ void rover_arm_setup(void)
     /* SHOULDER_SERVO setup */
 #if TEST_SHOULDER_SERVO == 1
     Shoulder.setAngleLimits(SHOULDER_MIN_ANGLE, SHOULDER_MAX_ANGLE);
-    Shoulder.reset_encoder();
+    // Shoulder.reset_encoder();
     Shoulder.set_safety_pins(SHOULDER_BRAKE, -1, -1);
     Shoulder.begin(REG_KP_SHOULDER, REG_KI_SHOULDER, REG_KD_SHOULDER, REG_KP_SHOULDER_AGG, REG_KI_SHOULDER_AGG, REG_KD_SHOULDER_AGG);
-#if SIMULATE_LIMIT_SWITCH == 1
+#if SKIP_MASTERING == 1
     Shoulder.stop();
     Shoulder.set_current_as_zero_angle_sw();
     Shoulder.newSetpoint(0.0);
@@ -227,12 +227,12 @@ void rover_arm_setup(void)
     /*---WAIST_SERVO setup---*/
 #if TEST_WAIST_SERVO == 1
     Waist.wrist_waist = 1;
-    Waist.setAngleLimits(MIN_FLOAT, MAX_FLOAT);
-    Waist.reset_encoder();
+    Waist.setAngleLimits(WAIST_MIN_ANGLE, WAIST_MAX_ANGLE);
+    // Waist.reset_encoder();
     Waist.begin(regKp_waist, regKi_waist, regKd_waist);
 #endif
 
-#if SIMULATE_LIMIT_SWITCH == 1
+#if SKIP_MASTERING == 1
 
 #else
     while (!limit_set)
@@ -339,7 +339,7 @@ void limit_wrist_pitch_max_int()
             limit_wrist_pitch_max_activated = 1;
             Serial.println("Wrist pitch max limit reached");
             Wrist_Pitch.stop();
-            Wrist_Pitch.set_current_as_max_angle_sw();
+            Wrist_Pitch.set_current_as_angle_sw(Wrist_Pitch.max_angle);
         }
         else
         {
@@ -361,7 +361,7 @@ void limit_wrist_pitch_min_int()
             limit_wrist_pitch_min_activated = 1;
             Serial.println("Wrist pitch min limit reached");
             Wrist_Pitch.stop();
-            Wrist_Pitch.set_current_as_zero_angle_sw();
+            Wrist_Pitch.set_current_as_angle_sw(Wrist_Pitch.min_angle);
         }
         else
         {

@@ -88,7 +88,7 @@ public: // TESTING only
     int _pwm_freq;
 
     int movingAverageWindowSize;
-    double lowestAngle, highestAngle;
+    double min_angle, max_angle;
     int escType;
     int adcResult;
     double currentAngle, lastAngle;

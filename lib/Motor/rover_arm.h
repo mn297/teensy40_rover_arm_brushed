@@ -5,6 +5,17 @@
 #define BRUSHLESS_ARM 1
 #define TICK 1
 
+// CONFIGURATION---------------------------------------------------------------
+#define TEST_ENCODER 0
+#define SKIP_MASTERING 0
+#define MASTERING 1
+#define TEST_LOOP 1
+#define TEST_LIMIT_SWITCH 0
+
+#define PID_PERIOD_US 10000
+#define PID_DT (PID_PERIOD_US * 1e-6f)
+#define ROVER_LOOP_PERIOD_MS 250
+
 // TEENSY PINS------------------------------------------------------------------
 #ifdef USE_TEENSY
 // Teensy 4.0 compatibility.
@@ -62,10 +73,6 @@
 #define LIMIT_WAIST_MIN NO4
 #endif
 
-#define PID_PERIOD_US 10000
-#define PID_DT (PID_PERIOD_US * 1e-6f)
-
-#define ROVER_LOOP_PERIOD_MS 250
 // DEBUG SETTINGS---------------------------------------------------------------
 #define DEBUG_GDB_STUB 0
 #define DEBUG_PID 0
@@ -92,18 +99,11 @@
 #define TEST_WAIST_SERVO 0
 #endif
 
-#define TEST_ENCODER 0
-#define TEST_WRIST_ROLL_MINI 0
-#define SIMULATE_LIMIT_SWITCH 1
-#define TEST_LOOP 1
-#define TEST_LIMIT_SWITCH 0
-
 #define ELBOW_MIN_ANGLE MIN_FLOAT
 #define ELBOW_MAX_ANGLE MAX_FLOAT
 #define ELBOW_GEAR_RATIO 1.0f
 
 // WRIST_ROLL_CYTRON
-#if TEST_WRIST_ROLL_MINI == 0
 #define REG_KP_WRIST_ROLL 0.15f
 #define REG_KI_WRIST_ROLL 0.1f
 #define REG_KD_WRIST_ROLL 0.02f
@@ -113,15 +113,6 @@
 #define WRIST_ROLL_MIN_ANGLE MIN_FLOAT
 #define WRIST_ROLL_MAX_ANGLE MAX_FLOAT
 #define WRIST_ROLL_GEAR_RATIO 2.672222f
-#else
-#define REG_KP_WRIST_ROLL 0.5f
-#define REG_KI_WRIST_ROLL 0.1f
-#define REG_KD_WRIST_ROLL 0.0f
-#define WRIST_ROLL_MIN_ANGLE MIN_FLOAT
-#define WRIST_ROLL_MAX_ANGLE MAX_FLOAT
-#define WRIST_ROLL_GEAR_RATIO 2.672222f
-// #define WRIST_ROLL_GEAR_RATIO 1.0f
-#endif
 
 // WRIST_PITCH_CYTRON
 #define REG_KP_WRIST_PITCH 0.08f
@@ -153,7 +144,6 @@
 #define ELBOW_MAX_ANGLE 75.0f
 
 // SHOULDER_SERVO
-// #define REG_KP_SHOULDER 0.35f
 #define REG_KP_SHOULDER 0.5f
 #define REG_KI_SHOULDER 0.2f
 #define REG_KD_SHOULDER 0.1f
@@ -167,6 +157,9 @@
 #define REG_KP_WAIST 0.4f
 #define REG_KI_WAIST 0.1f
 #define REG_KD_WAIST 0.1f
+#define REG_KP_WAIST_AGG 0.6f
+#define REG_KI_WAIST_AGG 0.1f
+#define REG_KD_WAIST_AGG 0.1f
 #define WAIST_MIN_ANGLE -125.97f
 #define WAIST_MAX_ANGLE 118.76f
 
