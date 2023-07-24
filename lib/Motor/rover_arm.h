@@ -3,13 +3,13 @@
 #define IRQ_DEBUG_PRIORITY 10
 #define BRUSHED_ARM 1
 #define BRUSHLESS_ARM 0
-#define TICK 1
 
 // CONFIGURATION---------------------------------------------------------------
 #define TEST_ENCODER 0
 #define SKIP_MASTERING 0
-#define MASTERING 1
+#define MASTERING 0
 #define MASTERING_TEST 1
+#define TICK 0
 #define TEST_LOOP 1
 #define TEST_LIMIT_SWITCH 0
 
@@ -100,12 +100,10 @@
 #define TEST_WAIST_SERVO 0
 #endif
 
-#define ELBOW_MIN_ANGLE MIN_FLOAT
-#define ELBOW_MAX_ANGLE MAX_FLOAT
 #define ELBOW_GEAR_RATIO 1.0f
 
 // WRIST_ROLL_CYTRON
-#define REG_KP_WRIST_ROLL 0.15f
+#define REG_KP_WRIST_ROLL 0.5f
 #define REG_KI_WRIST_ROLL 0.1f
 #define REG_KD_WRIST_ROLL 0.02f
 #define REG_KP_WRIST_ROLL_AGG 0.3f
@@ -114,6 +112,7 @@
 #define WRIST_ROLL_MIN_ANGLE MIN_FLOAT
 #define WRIST_ROLL_MAX_ANGLE MAX_FLOAT
 #define WRIST_ROLL_GEAR_RATIO 2.672222f
+#define WRIST_ROLL_ZERO_ANGLE 278.0f
 
 // WRIST_PITCH_CYTRON
 #define REG_KP_WRIST_PITCH 0.08f
@@ -145,7 +144,7 @@
 #define REG_KD_ELBOW_AGG 0.2f
 #define ELBOW_MIN_ANGLE -70.0f
 #define ELBOW_MAX_ANGLE 75.0f
-#define ELBOW_ZERO_ANGLE 0
+#define ELBOW_ZERO_ANGLE 170.0f + (-256.0f * 360.0f)
 
 // SHOULDER_SERVO
 #define REG_KP_SHOULDER 0.5f
@@ -156,7 +155,7 @@
 #define REG_KD_SHOULDER_AGG 0.1f
 #define SHOULDER_MIN_ANGLE -60.0f
 #define SHOULDER_MAX_ANGLE 90.0f
-#define SHOULDER_ZERO_ANGLE 0
+#define SHOULDER_ZERO_ANGLE 90.0f + (-256.0f * 360.0f)
 
 // WAIST_SERVO
 #define REG_KP_WAIST 0.4f

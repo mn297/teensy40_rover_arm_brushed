@@ -60,10 +60,13 @@ void print_motor_volatile(char *msg, void *pMotor)
 
 void print_motor(char *msg, void *pMotor)
 {
-    printf("%s setpoint %.2f, angle_sw %.2f, output %.2f, zero_angle_sw %.2f, gear ratio %.2f",
+    printf("%s sp %.2f, angle_sw %.2f, angle_multi %.2f, angle_raw %.2f, turns %d, output %.2f, zero_angle_sw %.2f, gear_ratio %.2f",
            msg,
            ((RoverArmMotor *)pMotor)->setpoint,
            ((RoverArmMotor *)pMotor)->currentAngle,
+           ((RoverArmMotor *)pMotor)->current_angle_multi,
+           ((RoverArmMotor *)pMotor)->_angle_raw,
+           ((RoverArmMotor *)pMotor)->_turns,
            ((RoverArmMotor *)pMotor)->output,
            ((RoverArmMotor *)pMotor)->zero_angle_sw,
            ((RoverArmMotor *)pMotor)->gear_ratio);
@@ -154,13 +157,13 @@ void rover_arm_setup(void)
 #if TEST_WRIST_ROLL_CYTRON == 1
     Wrist_Roll.wrist_waist = 1;
     Wrist_Roll.set_gear_ratio(WRIST_ROLL_GEAR_RATIO);
-    // Wrist_Roll.set_gear_ratio(1);
     Wrist_Roll.setAngleLimits(WRIST_ROLL_MIN_ANGLE, WRIST_ROLL_MAX_ANGLE);
-    // Wrist_Roll.reset_encoder();
     Wrist_Roll.stop_tick = 1;
     Wrist_Roll.begin(REG_KP_WRIST_ROLL, REG_KI_WRIST_ROLL, REG_KD_WRIST_ROLL,
                      REG_KP_WRIST_ROLL_AGG, REG_KI_WRIST_ROLL_AGG, REG_KD_WRIST_ROLL_AGG);
-    Wrist_Roll.newSetpoint(0.0);
+    // Assume at zero angle at startup.
+    Wrist_Roll.set_current_as_zero_angle_sw();
+    Wrist_Roll.new_setpoint(0.0);
 #endif
 
     /*---WRIST_PITCH_CYTRON setup---*/
@@ -174,7 +177,7 @@ void rover_arm_setup(void)
     Wrist_Pitch.begin(REG_KP_WRIST_PITCH, REG_KI_WRIST_PITCH, REG_KD_WRIST_PITCH,
                       REG_KP_WRIST_PITCH_AGG, REG_KI_WRIST_PITCH_AGG, REG_KD_WRIST_PITCH_AGG);
     Wrist_Pitch.set_current_as_zero_angle_sw(WRIST_PITCH_ZERO_ANGLE);
-    Wrist_Pitch.newSetpoint(0.0);
+    Wrist_Pitch.new_setpoint(0.0);
 #endif
 
     /*---END_EFFECTOR_CYTRON setup---*/
@@ -187,7 +190,7 @@ void rover_arm_setup(void)
 #if SKIP_MASTERING == 1
     End_Effector.stop();
     End_Effector.set_current_as_zero_angle_sw();
-    End_Effector.newSetpoint(0.0);
+    End_Effector.new_setpoint(0.0);
 #endif
 #endif
 
@@ -197,11 +200,8 @@ void rover_arm_setup(void)
     // Elbow.reset_encoder();
     Elbow.set_safety_pins(ELBOW_BRAKE, LIMIT_ELBOW_MAX, LIMIT_ELBOW_MIN);
     Elbow.begin(REG_KP_ELBOW, REG_KI_ELBOW, REG_KD_ELBOW, REG_KP_ELBOW_AGG, REG_KI_ELBOW_AGG, REG_KD_ELBOW_AGG);
-#if SKIP_MASTERING == 1
-    Elbow.stop();
-    Elbow.set_current_as_zero_angle_sw();
-    Elbow.newSetpoint(0.0);
-#endif
+    Elbow.set_current_as_zero_angle_sw(ELBOW_ZERO_ANGLE);
+    Elbow.new_setpoint(0.0);
 #endif
 
     /* SHOULDER_SERVO setup */
@@ -210,11 +210,8 @@ void rover_arm_setup(void)
     // Shoulder.reset_encoder();
     Shoulder.set_safety_pins(SHOULDER_BRAKE, -1, -1);
     Shoulder.begin(REG_KP_SHOULDER, REG_KI_SHOULDER, REG_KD_SHOULDER, REG_KP_SHOULDER_AGG, REG_KI_SHOULDER_AGG, REG_KD_SHOULDER_AGG);
-#if SKIP_MASTERING == 1
-    Shoulder.stop();
-    Shoulder.set_current_as_zero_angle_sw();
-    Shoulder.newSetpoint(0.0);
-#endif
+    Shoulder.set_current_as_zero_angle_sw(SHOULDER_ZERO_ANGLE);
+    Shoulder.new_setpoint(0.0);
 #endif
 
     /*---WAIST_SERVO setup---*/
@@ -225,12 +222,6 @@ void rover_arm_setup(void)
     Waist.begin(regKp_waist, regKi_waist, regKd_waist);
 #endif
 
-#if SKIP_MASTERING == 1
-
-#else
-    while (!limit_set)
-        ;
-#endif
     attach_all_interrupts();
     delay(250);
     rover_arm_timer.begin(rover_arm_timer_routine, PID_PERIOD_US);

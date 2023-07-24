@@ -127,7 +127,7 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     // if(brake)  engage_brake(); //use brake if there is one
     if (_limit_switch != -1)
         engage_brake(); // use brake if there is one
-    Serial.println("RoverArmMotor::begin() 6");
+    Serial.println("RoverArmMotor::begin() 6 BEFORE MASTERING");
 
     /*------------------Mastering------------------*/
 #if MASTERING == 1
@@ -226,7 +226,7 @@ void RoverArmMotor::tick()
     lastAngle = currentAngle;
     //------------------Compute PID------------------//
     // Retune PID for small errors.
-        if (diff > 30.0)
+    if (diff > 30.0)
     {
         internalPIDInstance->setPID(aggKp, aggKi, aggKd);
     }
@@ -438,15 +438,17 @@ bool RoverArmMotor::setMultiplierBool(bool mult, double ratio)
 }
 
 // For display purposes
-double RoverArmMotor::getSetpoint()
+double RoverArmMotor::get_setpoint()
 {
     return setpoint / gear_ratio;
 }
 
-bool RoverArmMotor::newSetpoint(double angle)
+// Remove gear_ration burden from user.
+bool RoverArmMotor::new_setpoint(double angle)
 {
-    Serial.printf("RoverArmMotor::newSetpoint() angle = %f\r\n", angle);
+    Serial.printf("RoverArmMotor::new_setpoint() angle = %f\r\n", angle);
     double temp_setpoint = angle * gear_ratio;
+    // Extra step for wrist_waist.
     if (wrist_waist)
     {
         temp_setpoint = std::fmod(temp_setpoint, angle_full_turn);
@@ -578,16 +580,15 @@ int RoverArmMotor::get_current_angle_multi(double *angle)
         return -1;
     }
 
-    double angle_raw = mapFloat((float)result_arr[0], MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f); // mn297 potentiometer encoder
-    int turns = result_arr[1];
-    *angle = angle_raw + 360 * turns;
+    _angle_raw = mapFloat((float)result_arr[0], MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f); // mn297 potentiometer encoder
+    _turns = result_arr[1];
+    *angle = _angle_raw + 360 * _turns;
 
     return 0;
 }
 
 int RoverArmMotor::get_current_angle_sw(double *angle)
 {
-    double current_angle_multi;
     int error = get_current_angle_multi(&current_angle_multi);
     if (error == -1)
     {
@@ -608,7 +609,6 @@ int RoverArmMotor::get_current_angle_sw(double *angle)
             temp += (360 * gear_ratio);
         }
         *angle = temp;
-        // printf("diff: %f, angle: %f\r\n", diff, *angle);
     }
     else
     {

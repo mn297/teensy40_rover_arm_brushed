@@ -42,7 +42,7 @@ public:
     uint32_t get_turns_encoder(); // mn297
     void reset_encoder();         // mn297
     bool setMultiplierBool(bool mult, double ratio);
-    bool newSetpoint(double angle);
+    bool new_setpoint(double angle);
 
     void setPIDOutputLimits(double lower_end, double upper_end);
     void setMovingAverageWindowSize(int size);
@@ -54,7 +54,7 @@ public:
     int get_current_angle_multi(double *angle);
     int get_current_angle_sw(double *angle);
 
-    double getSetpoint();
+    double get_setpoint();
     double getCurrentOutput();
     int getDirection();
     double getRatio();
@@ -92,6 +92,9 @@ public: // TESTING only
     int escType;
     int adcResult;
     double currentAngle, lastAngle;
+    double current_angle_multi;
+    int _turns;
+    double _angle_raw;
     bool wrist_waist;
     // int multiplier;
     volatile double input;
