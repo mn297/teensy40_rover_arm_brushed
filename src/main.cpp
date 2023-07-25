@@ -92,9 +92,9 @@ void setup()
     double angle_raw = mapFloat((float)result_arr[0], MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f); // mn297 potentiometer encoder
     Serial.printf("setup() BEFORE angle: %.2f, turns: %d\r\n", angle_raw, result_arr[1]);
   }
-  // setZeroSPI(CS1);
+  setZeroSPI(CS1);
   delay(1000);
-  // resetAMT22(CS1);
+  resetAMT22(CS1);
   delay(1000);
   error = -1;
   while (error == -1)

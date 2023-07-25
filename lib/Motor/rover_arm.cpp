@@ -97,17 +97,17 @@ RoverArmMotor End_Effector(&hspi1, CYTRON_PWM_1, CYTRON_DIR_1, AMT22_1, CYTRON, 
 
 /*---------------------ELBOW_SERVO DECLARATIONS---------------------*/
 #if TEST_ELBOW_SERVO == 1
-RoverArmMotor Elbow(PWM1, -1, CS1, BLUE_ROBOTICS, ELBOW_MIN_ANGLE, ELBOW_MAX_ANGLE);
+RoverArmMotor Elbow(PWM2, -1, CS1, BLUE_ROBOTICS, ELBOW_MIN_ANGLE, ELBOW_MAX_ANGLE);
 #endif
 
 /*---------------------SHOULDER_SERVO DECLARATIONS---------------------*/
 #if TEST_SHOULDER_SERVO == 1
-RoverArmMotor Shoulder(PWM2, -1, CS2, BLUE_ROBOTICS, SHOULDER_MIN_ANGLE, SHOULDER_MAX_ANGLE);
+RoverArmMotor Shoulder(PWM1, -1, CS2, BLUE_ROBOTICS, SHOULDER_MIN_ANGLE, SHOULDER_MAX_ANGLE);
 #endif
 
 /*---------------------WAIST_SERVO DECLARATIONS---------------------*/
 #if TEST_WAIST_SERVO == 1
-RoverArmMotor Waist(PWM2, -1, CS3, BLUE_ROBOTICS, WAIST_MIN_ANGLE, WAIST_MAX_ANGLE);
+RoverArmMotor Waist(PWM3, -1, CS3, BLUE_ROBOTICS, WAIST_MIN_ANGLE, WAIST_MAX_ANGLE);
 #endif
 
 void rover_arm_timer_routine()
@@ -198,6 +198,8 @@ void rover_arm_setup(void)
 #if TEST_ELBOW_SERVO == 1
     Elbow.setAngleLimits(ELBOW_MIN_ANGLE, ELBOW_MAX_ANGLE);
     // Elbow.reset_encoder();
+    Elbow.stop_tick = 0;
+    Elbow.fight_gravity = 1;
     Elbow.set_safety_pins(ELBOW_BRAKE, LIMIT_ELBOW_MAX, LIMIT_ELBOW_MIN);
     Elbow.begin(REG_KP_ELBOW, REG_KI_ELBOW, REG_KD_ELBOW, REG_KP_ELBOW_AGG, REG_KI_ELBOW_AGG, REG_KD_ELBOW_AGG);
     Elbow.set_current_as_zero_angle_sw(ELBOW_ZERO_ANGLE);

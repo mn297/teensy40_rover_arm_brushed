@@ -1,19 +1,19 @@
 // META SETTINGS---------------------------------------------------------------
 #define USE_TEENSY 1
 #define IRQ_DEBUG_PRIORITY 10
-#define BRUSHED_ARM 1
-#define BRUSHLESS_ARM 0
+#define BRUSHED_ARM 0
+#define BRUSHLESS_ARM 1
 
 // CONFIGURATION---------------------------------------------------------------
 #define TEST_ENCODER 0
 #define SKIP_MASTERING 0
 #define MASTERING 0
-#define MASTERING_TEST 1
-#define TICK 0
+#define MASTERING_TEST 0
+#define TICK 1
 #define TEST_LOOP 1
 #define TEST_LIMIT_SWITCH 0
 
-#define PID_PERIOD_US 10000
+#define PID_PERIOD_US 1000
 #define PID_DT (PID_PERIOD_US * 1e-6f)
 #define ROVER_LOOP_PERIOD_MS 250
 
@@ -96,7 +96,7 @@
 
 #if BRUSHLESS_ARM == 1
 #define TEST_ELBOW_SERVO 1
-#define TEST_SHOULDER_SERVO 1
+#define TEST_SHOULDER_SERVO 0
 #define TEST_WAIST_SERVO 0
 #endif
 
@@ -137,14 +137,14 @@
 
 // ELBOW_SERVO
 #define REG_KP_ELBOW 0.3f
-#define REG_KI_ELBOW 0.2f
+#define REG_KI_ELBOW 0.9f
 #define REG_KD_ELBOW 0.2f
 #define REG_KP_ELBOW_AGG 0.5f
-#define REG_KI_ELBOW_AGG 0.2f
+#define REG_KI_ELBOW_AGG 0.9f
 #define REG_KD_ELBOW_AGG 0.2f
 #define ELBOW_MIN_ANGLE -70.0f
 #define ELBOW_MAX_ANGLE 75.0f
-#define ELBOW_ZERO_ANGLE 170.0f + (-256.0f * 360.0f)
+#define ELBOW_ZERO_ANGLE 170.0f + (-1.0f * 360.0f)
 
 // SHOULDER_SERVO
 #define REG_KP_SHOULDER 0.5f

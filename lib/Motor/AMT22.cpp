@@ -118,7 +118,8 @@ int getTurnCounterSPI(int16_t *returnArr, uint16_t encoderPin, uint8_t resolutio
   }
 
   // using the equation on the datasheet we can calculate the checksums and then make sure they match what the encoder sent
-  if ((binaryArray[15] == !(binaryArray[13] ^ binaryArray[11] ^ binaryArray[9] ^ binaryArray[7] ^ binaryArray[5] ^ binaryArray[3] ^ binaryArray[1])) && (binaryArray[14] == !(binaryArray[12] ^ binaryArray[10] ^ binaryArray[8] ^ binaryArray[6] ^ binaryArray[4] ^ binaryArray[2] ^ binaryArray[0])))
+  if ((binaryArray[15] == !(binaryArray[13] ^ binaryArray[11] ^ binaryArray[9] ^ binaryArray[7] ^ binaryArray[5] ^ binaryArray[3] ^ binaryArray[1])) 
+  && (binaryArray[14] == !(binaryArray[12] ^ binaryArray[10] ^ binaryArray[8] ^ binaryArray[6] ^ binaryArray[4] ^ binaryArray[2] ^ binaryArray[0])))
   {
     // we got back a good position, so just mask away the checkbits
     //  bitstream &= 0x3FFF;
@@ -141,7 +142,8 @@ int getTurnCounterSPI(int16_t *returnArr, uint16_t encoderPin, uint8_t resolutio
     binaryArray[i] = (0x01) & (turns_raw >> (i));
   } // TODO check if this is necessary
   // using the equation on the datasheet we can calculate the checksums and then make sure they match what the encoder sent
-  if ((binaryArray[15] == !(binaryArray[13] ^ binaryArray[11] ^ binaryArray[9] ^ binaryArray[7] ^ binaryArray[5] ^ binaryArray[3] ^ binaryArray[1])) && (binaryArray[14] == !(binaryArray[12] ^ binaryArray[10] ^ binaryArray[8] ^ binaryArray[6] ^ binaryArray[4] ^ binaryArray[2] ^ binaryArray[0])))
+  if ((binaryArray[15] == !(binaryArray[13] ^ binaryArray[11] ^ binaryArray[9] ^ binaryArray[7] ^ binaryArray[5] ^ binaryArray[3] ^ binaryArray[1]))
+   && (binaryArray[14] == !(binaryArray[12] ^ binaryArray[10] ^ binaryArray[8] ^ binaryArray[6] ^ binaryArray[4] ^ binaryArray[2] ^ binaryArray[0])))
   {
     // we got back a good position, so just mask away the checkbits
     turns_raw &= 0x3FFF;
@@ -149,7 +151,7 @@ int getTurnCounterSPI(int16_t *returnArr, uint16_t encoderPin, uint8_t resolutio
     // the received 16 bit integer is supposed to be a 14-bit signed integer with two check bits as its
     // msb. once that is masked away, we still have to figure out its sign and extend it.
 
-    // check bit 14
+    // check bit 13
     if (turns_raw & 0x2000)
     {
       // if number is negative, extend the sign by or'ing it with 1100 0000 0000 0000 and complete it to

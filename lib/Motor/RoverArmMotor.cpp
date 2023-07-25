@@ -49,6 +49,7 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
 
     encoder_error = 0;
     stop_tick = 0;
+    fight_gravity = 0;
 
     _brake_pin = -1;
     _limit_pin_max = -1;
@@ -83,9 +84,9 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     Serial.println("RoverArmMotor::begin() 2");
 
     /*------------------Initialize timers------------------*/
-    delay(250 * DELAY_FACTOR);                // wait for the motor to start up
+    delay(500 * DELAY_FACTOR);                // wait for the motor to start up
     this->stop();                             // stop the motor
-    delay(250 * DELAY_FACTOR);                // wait for the motor to start up
+    delay(500 * DELAY_FACTOR);                // wait for the motor to start up
     this->stop();                             // stop the motor
     Serial.println("_pwm = " + String(_pwm)); // mn297
     Serial.println("RoverArmMotor::begin() 3");
@@ -93,13 +94,14 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     /*------------------Initialize PID------------------*/
     if (escType == CYTRON)
     {
+        Serial.println("RoverArmMotor::begin() 4 CYTRON");
         internalPIDInstance = new PID(PID_DT, 99.0, -99.0, regP, regD, regI);
     }
     else if (escType == BLUE_ROBOTICS)
     {
-        internalPIDInstance = new PID(PID_DT, 350.0, -350.0, regP, regD, regI);
+        Serial.println("RoverArmMotor::begin() 4 SERVO");
+        internalPIDInstance = new PID(PID_DT, 380.0, -380.0, regP, regD, regI);
     }
-    Serial.println("RoverArmMotor::begin() 4");
 
     /*------------------Get setpoint------------------*/
     // Get current location and set it as setpoint. Essential to prevent jerkiness
@@ -125,9 +127,11 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     regKd = regD;
 
     // if(brake)  engage_brake(); //use brake if there is one
-    if (_limit_switch != -1)
+    if (_brake_pin != -1)
         engage_brake(); // use brake if there is one
     Serial.println("RoverArmMotor::begin() 6 BEFORE MASTERING");
+    delay(250 * DELAY_FACTOR); // wait for the motor to start up
+    this->stop();              // stop the motor
 
     /*------------------Mastering------------------*/
 #if MASTERING == 1
@@ -211,7 +215,7 @@ void RoverArmMotor::tick()
     {
         diff = abs(currentAngle - setpoint);
     }
-    if (diff < 0.5)
+    if (diff < (0.5f + fight_gravity * 3.0f))
     {
 #if DEBUG_ROVER_ARM_MOTOR == 1
         Serial.println("RoverArmMotor::tick() diff < 0.5");
@@ -343,6 +347,27 @@ void RoverArmMotor::tick()
             // }
         }
         this->disengage_brake();
+        if (fight_gravity)
+        {
+            if (output < 0)
+            {
+                output *= 2.0f;
+                if (diff < 10.0f)
+                {
+                    output *= 0.8f;
+                }
+                if (diff < 3.0f)
+                {
+                    output += 50.0f;
+                }
+                output = max(output, -380.0f);
+            }
+            else
+            {
+                output *= 0.15f;
+            }
+        }
+
         volatile double output_actual = (1500.0f - 1.0f + output) * 100.0f / 2500.0f;
         pwmInstance->setPWM(_pwm, _pwm_freq, output_actual);
         return;

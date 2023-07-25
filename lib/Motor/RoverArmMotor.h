@@ -113,6 +113,7 @@ public: // TESTING only
 
     int encoder_error;
     int stop_tick;
+    int fight_gravity;
 
     enum ActuationStates
     {
