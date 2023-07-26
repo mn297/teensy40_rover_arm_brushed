@@ -313,7 +313,8 @@ void limit_wrist_pitch_max_int()
             limit_wrist_pitch_max_activated = 1;
             Serial.println("Wrist pitch max limit reached");
             Wrist_Pitch.stop();
-            Wrist_Pitch.set_current_as_angle_sw(Wrist_Pitch.max_angle);
+            // Wrist_Pitch.set_current_as_angle_sw(Wrist_Pitch.max_angle);
+            Wrist_Pitch.new_setpoint(Wrist_Pitch.setpoint - 5.0f);
         }
         else
         {
@@ -335,7 +336,8 @@ void limit_wrist_pitch_min_int()
             limit_wrist_pitch_min_activated = 1;
             Serial.println("Wrist pitch min limit reached");
             Wrist_Pitch.stop();
-            Wrist_Pitch.set_current_as_angle_sw(Wrist_Pitch.min_angle);
+            // Wrist_Pitch.set_current_as_angle_sw(Wrist_Pitch.min_angle);
+            Wrist_Pitch.new_setpoint(Wrist_Pitch.setpoint + 5.0f);
         }
         else
         {
