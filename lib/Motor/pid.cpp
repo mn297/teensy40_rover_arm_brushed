@@ -34,23 +34,23 @@ using namespace std;
 class PIDImpl
 {
 public:
-    PIDImpl(double dt, double max, double min, double Kp, double Kd, double Ki);
+    PIDImpl(double dt, double max, double min, double Kp, double Ki, double Kd);
     ~PIDImpl();
     double calculate(double setpoint, double pv);
-    void setPID(double Kp, double Kd, double Ki);
+    void setPID(double Kp, double Ki, double Kd);
 
-// private:
+    // private:
     double _dt;
     double _max;
     double _min;
     double _Kp;
-    double _Kd;
     double _Ki;
+    double _Kd;
     double _pre_error;
     double _integral;
 };
 
-PID::PID(double dt, double max, double min, double Kp, double Kd, double Ki)
+PID::PID(double dt, double max, double min, double Kp, double Ki, double Kd)
 {
     pimpl = new PIDImpl(dt, max, min, Kp, Kd, Ki);
 }
@@ -62,22 +62,22 @@ PID::~PID()
 {
     delete pimpl;
 }
-void PID::setPID(double Kp, double Kd, double Ki)
+void PID::setPID(double Kp, double Ki, double Kd)
 {
     pimpl->_Kp = Kp;
-    pimpl->_Kd = Kd;
     pimpl->_Ki = Ki;
+    pimpl->_Kd = Kd;
 }
 
 /**
  * Implementation
  */
-PIDImpl::PIDImpl(double dt, double max, double min, double Kp, double Kd, double Ki) : _dt(dt),
+PIDImpl::PIDImpl(double dt, double max, double min, double Kp, double Ki, double Kd) : _dt(dt),
                                                                                        _max(max),
                                                                                        _min(min),
+                                                                                       _Ki(Ki),
                                                                                        _Kp(Kp),
                                                                                        _Kd(Kd),
-                                                                                       _Ki(Ki),
                                                                                        _pre_error(0),
                                                                                        _integral(0)
 {
@@ -125,12 +125,12 @@ double PIDImpl::calculate(double setpoint, double pv)
 PIDImpl::~PIDImpl()
 {
 }
-void PIDImpl::setPID(double Kp, double Kd, double Ki)
+void PIDImpl::setPID(double Kp, double Ki, double Kd)
 {
     Serial.printf("Kp: %f, Kd: %f, Ki: %f\r\n", Kp, Kd, Ki);
     _Kp = Kp;
-    _Kd = Kd;
     _Ki = Ki;
+    _Kd = Kd;
 }
 
 #endif

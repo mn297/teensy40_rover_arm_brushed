@@ -36,34 +36,20 @@ uint32_t rx_index = 0;
 char command_buffer[20];
 double param1, param2, param3;
 
-void print_motor_volatile(char *msg, void *pMotor)
-{
-    double current_angle_sw;
-    ((RoverArmMotor *)pMotor)->get_current_angle_sw(&current_angle_sw);
-
-    printf("%s setpoint %.2f, angle_sw %.2f, output %.2f, zero_angle_sw %.2f, gear ratio %.2f",
-           msg,
-           ((RoverArmMotor *)pMotor)->setpoint,
-           current_angle_sw,
-           ((RoverArmMotor *)pMotor)->output,
-           ((RoverArmMotor *)pMotor)->zero_angle_sw,
-           ((RoverArmMotor *)pMotor)->gear_ratio);
-    if (((RoverArmMotor *)pMotor)->encoder_error)
-    {
-        printf(" (ERROR)\r\n");
-    }
-    else
-    {
-        printf("\r\n");
-    }
-}
-
 void print_motor(char *msg, void *pMotor)
 {
+#if TICK == 0
+    double current_angle_sw;
+    ((RoverArmMotor *)pMotor)->get_current_angle_sw(&current_angle_sw);
+#endif
     printf("%s sp %.2f, angle_sw %.2f, angle_multi %.2f, angle_raw %.2f, turns %d, output %.2f, zero_angle_sw %.2f, gear_ratio %.2f",
            msg,
            ((RoverArmMotor *)pMotor)->setpoint,
+#if TICK
            ((RoverArmMotor *)pMotor)->currentAngle,
+#else
+           current_angle_sw,
+#endif
            ((RoverArmMotor *)pMotor)->current_angle_multi,
            ((RoverArmMotor *)pMotor)->_angle_raw,
            ((RoverArmMotor *)pMotor)->_turns,
@@ -202,6 +188,8 @@ void rover_arm_setup(void)
     Elbow.fight_gravity = 1;
     Elbow.set_safety_pins(ELBOW_BRAKE, LIMIT_ELBOW_MAX, LIMIT_ELBOW_MIN);
     Elbow.begin(REG_KP_ELBOW, REG_KI_ELBOW, REG_KD_ELBOW, REG_KP_ELBOW_AGG, REG_KI_ELBOW_AGG, REG_KD_ELBOW_AGG);
+    Elbow.reset_encoder();
+    Elbow.set_zero_angle();
     Elbow.set_current_as_zero_angle_sw(ELBOW_ZERO_ANGLE);
     Elbow.new_setpoint(0.0);
 #endif

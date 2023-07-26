@@ -95,12 +95,12 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     if (escType == CYTRON)
     {
         Serial.println("RoverArmMotor::begin() 4 CYTRON");
-        internalPIDInstance = new PID(PID_DT, 99.0, -99.0, regP, regD, regI);
+        internalPIDInstance = new PID(PID_DT, 99.0, -99.0, regP, regI, regD);
     }
     else if (escType == BLUE_ROBOTICS)
     {
         Serial.println("RoverArmMotor::begin() 4 SERVO");
-        internalPIDInstance = new PID(PID_DT, 380.0, -380.0, regP, regD, regI);
+        internalPIDInstance = new PID(PID_DT, 375.0, -375.0, regP, regI, regD);
     }
 
     /*------------------Get setpoint------------------*/
@@ -318,57 +318,62 @@ void RoverArmMotor::tick()
     else if (escType == BLUE_ROBOTICS)
     {
         //------------------DEADBAND------------------//
-        double temp_output = abs(output);
-        if (temp_output <= DEADBAND_SERVO - 10.0f)
-        {
-            temp_output = 0;
-        }
-        else if ((temp_output > DEADBAND_SERVO - 10.0f) && (temp_output <= DEADBAND_SERVO))
-        {
-            // Enhance output.
-            if (output > 0)
-            {
-                temp_output = (output + DEADBAND_SERVO / 2);
-            }
-            else
-            {
-                temp_output = (output - DEADBAND_SERVO / 2);
-            }
-        }
-        else
-        {
-            // if (output > 0)
-            // {
-            //     temp_output = (output + deadband / 2);
-            // }
-            // else
-            // {
-            //     temp_output = (output - deadband / 2);
-            // }
-        }
+        // double temp_output = abs(output);
+        // if (temp_output <= DEADBAND_SERVO - 10.0f)
+        // {
+        //     temp_output = 0;
+        // }
+        // else if ((temp_output > DEADBAND_SERVO - 10.0f) && (temp_output <= DEADBAND_SERVO))
+        // {
+        //     // Enhance output.
+        //     if (output > 0)
+        //     {
+        //         temp_output = (output + DEADBAND_SERVO / 2);
+        //     }
+        //     else
+        //     {
+        //         temp_output = (output - DEADBAND_SERVO / 2);
+        //     }
+        // }
+        // else
+        // {
+        //     // if (output > 0)
+        //     // {
+        //     //     temp_output = (output + deadband / 2);
+        //     // }
+        //     // else
+        //     // {
+        //     //     temp_output = (output - deadband / 2);
+        //     // }
+        // }
         this->disengage_brake();
         if (fight_gravity)
         {
             if (output < 0)
             {
-                output *= 2.0f;
+                output *= 3.0f;
+                output += 20.0f;
                 if (diff < 10.0f)
                 {
-                    output *= 0.8f;
+                    output *= 1.0f;
                 }
-                if (diff < 3.0f)
-                {
-                    output += 50.0f;
-                }
-                output = max(output, -380.0f);
+                // if (diff < 3.0f)
+                // {
+                //     output += 20.0f;
+                // }
+                Serial.printf("BEFORE RoverArmMotor::tick() output = %f\r\n", output);
+                output = max(output, -220.0f);
+                Serial.printf("AFTER RoverArmMotor::tick() output = %f\r\n", output);
             }
             else
             {
-                output *= 0.15f;
+                // Light braking.
+                output = -25.0f;
+                Serial.printf("BRAKING output = %f\r\n", output);
             }
         }
 
-        volatile double output_actual = (1500.0f - 1.0f + output) * 100.0f / 2500.0f;
+        volatile double output_actual = (1500.0f + output) * 100.0f / 2500.0f;
         pwmInstance->setPWM(_pwm, _pwm_freq, output_actual);
         return;
     }
@@ -517,6 +522,7 @@ void RoverArmMotor::setAngleLimits(double lowest, double highest)
 void RoverArmMotor::set_zero_angle()
 {
     setZeroSPI(_encoder); // timer not used, so nullptr
+    return;
 }
 
 void RoverArmMotor::reset_encoder()
@@ -623,7 +629,7 @@ int RoverArmMotor::get_current_angle_sw(double *angle)
 #endif
         return -1;
     }
-
+    encoder_error = 0;
     double diff = current_angle_multi - zero_angle_sw;
     if (wrist_waist) // TODO optimize
     {

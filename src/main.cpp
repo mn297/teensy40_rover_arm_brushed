@@ -129,12 +129,15 @@ void loop()
   Serial.printf("AFTER angle: %.2f, turns: %d, angle_multi %.2f\r\n", angle_raw, turns, angle_multi);
 #endif
 
-// Elbow.disengage_brake();
+#if TICK == 0
+Elbow.disengage_brake();
 // Serial.printf("Elbow disengage_brake\r\n");
 // delay(1000);
 // Elbow.engage_brake();
 // Serial.printf("Elbow engage_brake\r\n");
 // delay(1000);
+#endif
+
 #if MASTERING_TEST == 0
 #if TEST_LOOP == 1
   rover_arm_loop();
