@@ -144,7 +144,7 @@ void rover_arm_setup(void)
     Wrist_Roll.wrist_waist = 1;
     Wrist_Roll.set_gear_ratio(WRIST_ROLL_GEAR_RATIO);
     Wrist_Roll.setAngleLimits(WRIST_ROLL_MIN_ANGLE, WRIST_ROLL_MAX_ANGLE);
-    Wrist_Roll.stop_tick = 1;
+    // Wrist_Roll.stop_tick = 1;
     Wrist_Roll.begin(REG_KP_WRIST_ROLL, REG_KI_WRIST_ROLL, REG_KD_WRIST_ROLL,
                      REG_KP_WRIST_ROLL_AGG, REG_KI_WRIST_ROLL_AGG, REG_KD_WRIST_ROLL_AGG);
     // Assume at zero angle at startup.
@@ -158,7 +158,7 @@ void rover_arm_setup(void)
     Wrist_Pitch.set_gear_ratio(WRIST_PITCH_GEAR_RATIO);
     Wrist_Pitch.setAngleLimits(WRIST_PITCH_MIN_ANGLE, WRIST_PITCH_MAX_ANGLE);
     // Wrist_Pitch.reset_encoder();
-    Wrist_Pitch.stop_tick = 1;
+    // Wrist_Pitch.stop_tick = 1;
     Wrist_Pitch.set_safety_pins(-1, LIMIT_WRIST_PITCH_MAX, LIMIT_WRIST_PITCH_MIN);
     Wrist_Pitch.begin(REG_KP_WRIST_PITCH, REG_KI_WRIST_PITCH, REG_KD_WRIST_PITCH,
                       REG_KP_WRIST_PITCH_AGG, REG_KI_WRIST_PITCH_AGG, REG_KD_WRIST_PITCH_AGG);

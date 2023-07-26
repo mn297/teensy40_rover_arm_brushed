@@ -1,8 +1,8 @@
 // META SETTINGS---------------------------------------------------------------
 #define USE_TEENSY 1
 #define IRQ_DEBUG_PRIORITY 10
-#define BRUSHED_ARM 0
-#define BRUSHLESS_ARM 1
+#define BRUSHED_ARM 1
+#define BRUSHLESS_ARM 0
 
 // CONFIGURATION---------------------------------------------------------------
 #define TEST_ENCODER 0
@@ -89,7 +89,7 @@
 
 // MOTOR SETTINGS---------------------------------------------------------------
 #if BRUSHED_ARM == 1
-#define TEST_WRIST_ROLL_CYTRON 1
+#define TEST_WRIST_ROLL_CYTRON 0
 #define TEST_WRIST_PITCH_CYTRON 1
 #define TEST_END_EFFECTOR_CYTRON 0
 #endif
@@ -112,18 +112,20 @@
 #define WRIST_ROLL_MIN_ANGLE MIN_FLOAT
 #define WRIST_ROLL_MAX_ANGLE MAX_FLOAT
 #define WRIST_ROLL_GEAR_RATIO 2.672222f
-#define WRIST_ROLL_ZERO_ANGLE 278.0f
+#define WRIST_ROLL_ZERO_ANGLE 270.0f
 
 // WRIST_PITCH_CYTRON
-#define REG_KP_WRIST_PITCH 0.08f
-#define REG_KI_WRIST_PITCH 0.05f
-#define REG_KD_WRIST_PITCH 0.05f
-#define REG_KP_WRIST_PITCH_AGG 0.08f
-#define REG_KI_WRIST_PITCH_AGG 0.05f
-#define REG_KD_WRIST_PITCH_AGG 0.05f
+#define REG_KP_WRIST_PITCH 1.4f
+#define REG_KI_WRIST_PITCH 1.5f
+#define REG_KD_WRIST_PITCH 0
+#define REG_KP_WRIST_PITCH_AGG 2.0f
+#define REG_KI_WRIST_PITCH_AGG 1.5f
+#define REG_KD_WRIST_PITCH_AGG 0
 #define WRIST_PITCH_MIN_ANGLE -75.0f
-#define WRIST_PITCH_MAX_ANGLE 75.0f
-#define WRIST_PITCH_ZERO_ANGLE 0
+#define WRIST_PITCH_MIN_ANGLE -75.0f
+// #define WRIST_PITCH_MAX_ANGLE 75.0f
+#define WRIST_PITCH_MAX_ANGLE 30.0f
+#define WRIST_PITCH_ZERO_ANGLE (325.0f + (-1.0f * 360.0f))
 #define WRIST_PITCH_GEAR_RATIO 1.0f
 
 // END_EFFECTOR_CYTRON
@@ -144,7 +146,7 @@
 #define REG_KD_ELBOW_AGG 0
 #define ELBOW_MIN_ANGLE -70.0f
 #define ELBOW_MAX_ANGLE 75.0f
-#define ELBOW_ZERO_ANGLE 250.0f + (-1.0f * 360.0f)
+#define ELBOW_ZERO_ANGLE (245.0f + (-1.0f * 360.0f))
 
 // SHOULDER_SERVO
 #define REG_KP_SHOULDER 0.5f

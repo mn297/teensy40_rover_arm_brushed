@@ -130,11 +130,20 @@ void loop()
 #endif
 
 #if TICK == 0
-Elbow.disengage_brake();
-// Serial.printf("Elbow disengage_brake\r\n");
-// delay(1000);
-// Elbow.engage_brake();
-// Serial.printf("Elbow engage_brake\r\n");
+  // Elbow.disengage_brake();
+  // Serial.printf("Elbow disengage_brake\r\n");
+  // delay(1000);
+  // Elbow.engage_brake();
+  // Serial.printf("Elbow engage_brake\r\n");
+  // delay(1000);
+  digitalWrite(DIR1, HIGH);
+  delay(1000);
+  digitalWrite(DIR1, LOW);
+  delay(1000);
+  Wrist_Roll.forward(25);
+  Serial.printf("Wrist_Roll forward\r\n");
+// Wrist_Roll.reverse(25);
+// Serial.printf("Wrist_Roll reverse\r\n");
 // delay(1000);
 #endif
 

@@ -210,12 +210,13 @@ void RoverArmMotor::tick()
     if (wrist_waist)
     {
         diff = min(abs(currentAngle - setpoint), angle_full_turn - abs(currentAngle - setpoint));
+        Serial.printf("diff = %f\r\n", diff);
     }
     else
     {
         diff = abs(currentAngle - setpoint);
     }
-    if (diff < (0.5f + fight_gravity * 3.0f))
+    if (diff < (0.8f + fight_gravity * 3.0f))
     {
 #if DEBUG_ROVER_ARM_MOTOR == 1
         Serial.println("RoverArmMotor::tick() diff < 0.5");
