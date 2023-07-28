@@ -171,6 +171,7 @@ void RoverArmMotor::tick()
         {
             this->stop();
             this->reverse(10);
+            Serial.println("REVERSING!");
 #if DEBUG_ROVER_ARM_MOTOR
             Serial.println("RoverArmMotor::tick() _limit_pin_max");
 #endif

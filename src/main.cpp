@@ -136,15 +136,17 @@ void loop()
   // Elbow.engage_brake();
   // Serial.printf("Elbow engage_brake\r\n");
   // delay(1000);
-  digitalWrite(DIR1, HIGH);
-  delay(1000);
-  digitalWrite(DIR1, LOW);
-  delay(1000);
-  Wrist_Roll.forward(25);
-  Serial.printf("Wrist_Roll forward\r\n");
+  // digitalWrite(DIR1, HIGH);
+  // delay(1000);
+  // digitalWrite(DIR1, LOW);
+  // delay(1000);
+  // Wrist_Roll.forward(25);
+  // Serial.printf("Wrist_Roll forward\r\n");
 // Wrist_Roll.reverse(25);
 // Serial.printf("Wrist_Roll reverse\r\n");
 // delay(1000);
+// Wrist_Pitch.forward(25);
+Wrist_Pitch.reverse(25);
 #endif
 
 #if MASTERING_TEST == 0
