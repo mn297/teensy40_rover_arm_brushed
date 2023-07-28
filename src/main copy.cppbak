@@ -1,0 +1,100 @@
+#include <Arduino.h>
+#include <SPI.h>
+#include "rover_arm.h"
+#include "RoverArmMotor.h"
+#include "Teensy_PWM.h"
+#include "AMT22.h"
+#include <limits>
+#include <IntervalTimer.h>
+#include "TeensyDebug.h"
+#include <EEPROM.h>
+#include "DMAChannel.h"
+#include <ros.h>
+#include <std_msgs/Float32MultiArray.h>
+#include <std_msgs/Float32.h>
+#include <std_msgs/String.h>
+
+
+#if DEBUG_GDB_STUB == 1
+// #pragma GCC optimize("O0")
+#endif
+
+// No additional #include statements are needed
+
+#define MIN_FLOAT -std::numeric_limits<float>::infinity()
+#define MAX_FLOAT std::numeric_limits<float>::infinity()
+
+extern RoverArmMotor Wrist_Roll;
+extern RoverArmMotor Wrist_Pitch;
+extern RoverArmMotor End_Effector;
+extern RoverArmMotor Elbow;
+extern RoverArmMotor Shoulder;
+extern RoverArmMotor Waist;
+/*--------------------- ROS --------------------*/
+ros::NodeHandle nodeHandler;
+std_msgs::Float32MultiArray feedback, command;
+std_msgs::String str_msg;
+void commandCallback(const std_msgs::Float32MultiArray &command);
+
+#if BRUSHLESS_ARM == 1
+ros::Publisher ArmFeedback("arm12FB", &feedback);
+ros::Subscriber<std_msgs::Float32MultiArray> ArmCommand("arm12Cmd", commandCallback);
+#elif BRUSHED_ARM == 1
+ros::Publisher ArmFeedback("arm24FB", &feedback);
+ros::Publisher chatter("chatter", &str_msg);
+ros::Subscriber<std_msgs::Float32MultiArray> ArmCommand("arm24Cmd", commandCallback);
+#endif
+
+void commandCallback(const std_msgs::Float32MultiArray &command)
+{
+#if BRUSHLESS_ARM == 1
+  Elbow.newSetpoint((double)command.data[0]);
+  Shoulder.newSetpoint((double)command.data[1]);
+  Waist.newSetpoint((double)command.data[2]);
+
+  feedback.data_length = 3;
+  noInterrupts();
+  feedback.data[0] = (float)Elbow.currentAngle;
+  feedback.data[1] = (float)Shoulder.currentAngle;
+  feedback.data[2] = (float)Waist.currentAngle;
+  interrupts();
+
+#elif BRUSHED_ARM == 1
+  // End_Effector.newSetpoint((double) command.data[0]);
+  // Wrist_Roll.newSetpoint((double) command.data[1]);
+  // Wrist_Pitch.new_setpoint((double)command.data[2]);
+
+  feedback.data_length = 3;
+  noInterrupts();
+  feedback.data[0] = 67.0f;
+  feedback.data[1] = 68.0f;
+  feedback.data[2] = 69.0f;
+  interrupts();
+
+#endif
+
+  ArmFeedback.publish(&feedback);
+}
+void setup()
+{
+  nodeHandler.initNode();
+  nodeHandler.advertise(ArmFeedback);
+  nodeHandler.spinOnce();
+
+  // Serial.begin(115200);
+  // while (!Serial)
+  //   ;
+#if DEBUG_GDB_STUB == 1
+  debug.begin(SerialUSB1);
+  halt_cpu(); // stop on startup; if not, Teensy keeps running and you
+#endif
+  // rover_arm_setup();
+}
+
+void loop()
+{
+  nodeHandler.spinOnce();
+#if TEST_LOOP == 1
+  // rover_arm_loop();
+#endif
+}

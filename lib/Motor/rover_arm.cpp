@@ -14,50 +14,10 @@
 #include <bitset>
 #include <limits>
 
-#define MIN_FLOAT -std::numeric_limits<float>::infinity()
-#define MAX_FLOAT std::numeric_limits<float>::infinity()
-static void attach_all_interrupts();
-
-double setpoint = 0;
-int turn = 0;
-int limit_set = 0;
-int button_counter = 0;
-int is_turning = 0;
-
-// LOOP control variables.
-IntervalTimer rover_arm_timer;
-volatile bool spiLock = false;     // Lock for SPI
-volatile bool tickRequest = false; // Indicates if tick() wants to use SPI
-
-void print_motor(char *msg, void *pMotor)
-{
-#if TICK == 0
-    double current_angle_sw;
-    ((RoverArmMotor *)pMotor)->get_current_angle_sw(&current_angle_sw);
-#endif
-    printf("%s sp %.2f, angle_sw %.2f, angle_multi %.2f, angle_raw %.2f, turns %d, output %.2f, zero_angle_sw %.2f, gear_ratio %.2f",
-           msg,
-           ((RoverArmMotor *)pMotor)->setpoint,
-#if TICK
-           ((RoverArmMotor *)pMotor)->currentAngle,
-#else
-           current_angle_sw,
-#endif
-           ((RoverArmMotor *)pMotor)->current_angle_multi,
-           ((RoverArmMotor *)pMotor)->_angle_raw,
-           ((RoverArmMotor *)pMotor)->_turns,
-           ((RoverArmMotor *)pMotor)->output,
-           ((RoverArmMotor *)pMotor)->zero_angle_sw,
-           ((RoverArmMotor *)pMotor)->gear_ratio);
-    if (((RoverArmMotor *)pMotor)->encoder_error)
-    {
-        printf(" (ERROR)\r\n");
-    }
-    else
-    {
-        printf("\r\n");
-    }
-}
+// Comms includes.
+#include <ros.h>
+#include <std_msgs/Float32MultiArray.h>
+#include <std_msgs/String.h>
 
 /*---------------------WRIST_ROLL_CYTRON---------------------*/
 #if TEST_WRIST_ROLL_CYTRON == 1
@@ -88,6 +48,110 @@ RoverArmMotor Shoulder(PWM1, -1, CS2, BLUE_ROBOTICS, SHOULDER_MIN_ANGLE, SHOULDE
 #if TEST_WAIST_SERVO == 1
 RoverArmMotor Waist(PWM3, -1, CS3, BLUE_ROBOTICS, WAIST_MIN_ANGLE, WAIST_MAX_ANGLE);
 #endif
+
+/*--------------------- ROS --------------------*/
+ros::NodeHandle nodeHandler;
+std_msgs::String input_data; // This is what you'll use for the feedback.
+void commandCallback(const std_msgs::String &input_string);
+
+#if BRUSHLESS_ARM == 1
+ros::Publisher ArmFeedback("arm12FB", &input_data);
+// ros::Subscriber<std_msgs::Float32MultiArray> ArmCommand("arm12Cmd", commandCallback);
+ros::Subscriber<std_msgs::String> ArmCommand("arm12Cmd", commandCallback);
+#elif BRUSHED_ARM == 1
+ros::Publisher ArmFeedback("arm24FB", &input_data);
+// ros::Subscriber<std_msgs::Float32MultiArray> ArmCommand("arm24Cmd", commandCallback);
+ros::Subscriber<std_msgs::String> ArmCommand("arm24Cmd", commandCallback);
+#endif
+
+// Source: https://mcgill.sharepoint.com/sites/McGillRobotics_Group/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FMcGillRobotics%5FGroup%2FShared%20Documents%2FRover%20Project%2FSoftware%2FROS%20Message%20Instructions%2Epdf&parent=%2Fsites%2FMcGillRobotics%5FGroup%2FShared%20Documents%2FRover%20Project%2FSoftware&p=true&ct=1690126169268&or=Teams%2DHL&ga=1
+void commandCallback(const std_msgs::String &msg)
+{
+    float val1, val2, val3;
+    int parsed_values = sscanf(msg.data, "%f %f %f", &val1, &val2, &val3);
+
+    if (parsed_values == 3) // Check if all three floats were parsed successfully
+    {
+#if BRUSHLESS_ARM == 1
+        Elbow.newSetpoint((double)val1);
+        Shoulder.newSetpoint((double)val2);
+        Waist.newSetpoint((double)val3);
+
+        noInterrupts();
+        char feedback_buffer[50];
+        snprintf(feedback_buffer, sizeof(feedback_buffer), "%.2f %.2f %.2f", val1, val2, val3);
+        input_data.data = feedback_buffer;
+        ArmFeedback.publish(&input_data);
+        interrupts();
+#elif BRUSHED_ARM == 1
+        // End_Effector.new_setpoint((double)val1);
+        // Wrist_Roll.new_setpoint((double)val2);
+        Wrist_Pitch.new_setpoint((double)val3);
+
+        noInterrupts();
+        // feedback.data[0] = (float) End_Effector.currentAngle;
+        // feedback.data[1] = (float) Wrist_Roll.currentAngle;
+        // feedback.data[2] = (float)Wrist_Pitch.currentAngle;
+        char feedback_buffer[50];
+        snprintf(feedback_buffer, sizeof(feedback_buffer), "%.2f %.2f %.2f", val1, val2, val3);
+        input_data.data = feedback_buffer;
+        ArmFeedback.publish(&input_data);
+        interrupts();
+#endif
+    }
+    else
+    {
+        // Error in parsing the string
+        // You can handle it accordingly
+    }
+
+    ArmFeedback.publish(&msg); // Echoing back the same string message.
+}
+
+#define MIN_FLOAT -std::numeric_limits<float>::infinity()
+#define MAX_FLOAT std::numeric_limits<float>::infinity()
+static void attach_all_interrupts();
+
+double setpoint = 0;
+int turn = 0;
+int limit_set = 0;
+int button_counter = 0;
+int is_turning = 0;
+
+// LOOP control variables.
+IntervalTimer rover_arm_timer;
+volatile bool spiLock = false;     // Lock for SPI
+volatile bool tickRequest = false; // Indicates if tick() wants to use SPI
+
+void print_motor(char *msg, void *pMotor)
+{
+    // #if TICK == 0
+    //     double current_angle_sw;
+    //     ((RoverArmMotor *)pMotor)->get_current_angle_sw(&current_angle_sw);
+    // #endif
+    //     printf("%s sp %.2f, angle_sw %.2f, angle_multi %.2f, angle_raw %.2f, turns %d, output %.2f, zero_angle_sw %.2f, gear_ratio %.2f",
+    //            msg,
+    //            ((RoverArmMotor *)pMotor)->setpoint,
+    // #if TICK
+    //            ((RoverArmMotor *)pMotor)->currentAngle,
+    // #else
+    //            current_angle_sw,
+    // #endif
+    //            ((RoverArmMotor *)pMotor)->current_angle_multi,
+    //            ((RoverArmMotor *)pMotor)->_angle_raw,
+    //            ((RoverArmMotor *)pMotor)->_turns,
+    //            ((RoverArmMotor *)pMotor)->output,
+    //            ((RoverArmMotor *)pMotor)->zero_angle_sw,
+    //            ((RoverArmMotor *)pMotor)->gear_ratio);
+    //     if (((RoverArmMotor *)pMotor)->encoder_error)
+    //     {
+    //         printf(" (ERROR)\r\n");
+    //     }
+    //     else
+    //     {
+    //         printf("\r\n");
+    //     }
+}
 
 void rover_arm_timer_routine()
 {
@@ -127,10 +191,16 @@ void rover_arm_timer_routine()
 
 void rover_arm_setup(void)
 {
-    Serial.println("Starting up");
+    // Serial.println("Starting up");
 
     SPI.begin(); // initiate SPI bus
     SPI.setClockDivider(SPI_CLOCK_DIV64);
+
+    /*---------------------ROS---------------------*/
+    // Initialize ROS Node and advertise the feedback publisher.
+    nodeHandler.initNode();
+    nodeHandler.advertise(ArmFeedback);
+    nodeHandler.subscribe(ArmCommand);
 
     /*---WRIST_ROLL_CYTRON setup---*/
 #if TEST_WRIST_ROLL_CYTRON == 1
@@ -208,7 +278,7 @@ void rover_arm_setup(void)
     attach_all_interrupts();
     delay(250);
     rover_arm_timer.begin(rover_arm_timer_routine, PID_PERIOD_US);
-    Serial.println("Setup done, tick() timer started");
+    // Serial.println("Setup done, tick() timer started");
 }
 
 void rover_arm_loop()
@@ -229,6 +299,7 @@ void rover_arm_loop()
 
     if (currentMillis - lastPrint >= ROVER_LOOP_PERIOD_MS)
     {
+        nodeHandler.spinOnce();
 #if DEBUG_PRINT_MOTOR == 1
 #if TEST_WRIST_ROLL_CYTRON == 1
         print_motor("SP WRIST_ROLL_CYTRON", &Wrist_Roll);
@@ -256,10 +327,11 @@ void rover_arm_loop()
 
 #endif
         lastPrint = currentMillis; // Update the lastPrint time
-        Serial.println();
+        // Serial.println();
     }
     spiLock = false;
 }
+
 void test_limit_switches()
 {
     static unsigned long lastPrint = 0;     // Initialize lastPrint variable
@@ -271,7 +343,7 @@ void test_limit_switches()
         Serial.printf("low: %d\r\n", digitalRead(LIMIT_WRIST_PITCH_MIN));
 #endif
 #if TEST_WRIST_PITCH_CYTRON == 1
-        Serial.printf("high: %d\r\n", digitalRead(LIMIT_WRIST_PITCH_MAX));
+        // Serial.printf("high: %d\r\n", digitalRead(LIMIT_WRIST_PITCH_MAX));
 #endif
         lastPrint = currentMillis; // Update the lastPrint time
     }
@@ -299,7 +371,7 @@ void limit_wrist_pitch_max_int()
         if (digitalRead(LIMIT_WRIST_PITCH_MAX) == LOW)
         {
             limit_wrist_pitch_max_activated = 1;
-            Serial.println("Wrist pitch max limit reached");
+            // Serial.println("Wrist pitch max limit reached");
             Wrist_Pitch.stop();
             // Wrist_Pitch.set_current_as_angle_sw(Wrist_Pitch.max_angle);
             Wrist_Pitch.new_setpoint(Wrist_Pitch.setpoint - 5.0f);
@@ -322,7 +394,7 @@ void limit_wrist_pitch_min_int()
         if (is_low)
         {
             limit_wrist_pitch_min_activated = 1;
-            Serial.println("Wrist pitch min limit reached");
+            // Serial.println("Wrist pitch min limit reached");
             Wrist_Pitch.stop();
             // Wrist_Pitch.set_current_as_angle_sw(Wrist_Pitch.min_angle);
             Wrist_Pitch.new_setpoint(Wrist_Pitch.setpoint + 5.0f);
@@ -345,7 +417,7 @@ void limit_end_effector_max_int()
         if (digitalRead(LIMIT_END_EFFECTOR_MAX) == LOW)
         {
             limit_end_effector_max_activated = 1;
-            Serial.println("End effector max limit reached");
+            // Serial.println("End effector max limit reached");
             End_Effector.stop();
         }
         else
@@ -364,7 +436,7 @@ void limit_end_effector_min_int()
         if (digitalRead(LIMIT_END_EFFECTOR_MIN) == LOW)
         {
             limit_end_effector_min_activated = 1;
-            Serial.println("End effector min limit reached");
+            // Serial.println("End effector min limit reached");
             End_Effector.stop();
         }
         else
@@ -385,7 +457,7 @@ void limit_elbow_max_int()
         if (digitalRead(LIMIT_ELBOW_MAX) == LOW)
         {
             limit_end_effector_max_activated = 1;
-            Serial.println("Elbow max limit reached");
+            // Serial.println("Elbow max limit reached");
             Elbow.stop();
         }
         else
@@ -404,7 +476,7 @@ void limit_elbow_min_int()
         if (digitalRead(LIMIT_ELBOW_MIN) == LOW)
         {
             limit_end_effector_min_activated = 1;
-            Serial.println("Elbow min limit reached");
+            // Serial.println("Elbow min limit reached");
             Elbow.stop();
         }
         else
@@ -425,7 +497,7 @@ void limit_waist_max_int()
         if (digitalRead(LIMIT_WAIST_MAX) == LOW)
         {
             limit_end_effector_max_activated = 1;
-            Serial.println("Waist max limit reached");
+            // Serial.println("Waist max limit reached");
             Waist.stop();
         }
         else
@@ -444,7 +516,7 @@ void limit_waist_min_int()
         if (digitalRead(LIMIT_WAIST_MIN) == LOW)
         {
             limit_end_effector_min_activated = 1;
-            Serial.println("Waist min limit reached");
+            // Serial.println("Waist min limit reached");
             Waist.stop();
         }
         else
@@ -478,62 +550,62 @@ void attach_all_interrupts()
 #endif
 }
 
-void serialEvent()
-{
-    while (Serial.available())
-    {
-        // Read the incoming string
-        String incomingString = Serial.readStringUntil('\n');
+// void serialEvent()
+// {
+//     while (Serial.available())
+//     {
+//         // Read the incoming string
+//         String incomingString = Serial.readStringUntil('\n');
 
-        // Check if the incoming string starts with "setpoint"
-        // Initialize parameters
-        double param1, param2, param3;
+//         // Check if the incoming string starts with "setpoint"
+//         // Initialize parameters
+//         double param1, param2, param3;
 
-        // Use sscanf to extract the parameters
-        sscanf(incomingString.c_str(), "%lf %lf %lf", &param1, &param2, &param3);
+//         // Use sscanf to extract the parameters
+//         sscanf(incomingString.c_str(), "%lf %lf %lf", &param1, &param2, &param3);
 
-        // Now you can use param1, param2, param3
-        Serial.printf("Received angles: %f, %f, %f\r\n", param1, param2, param3);
+//         // Now you can use param1, param2, param3
+//         // Serial.printf("Received angles: %f, %f, %f\r\n", param1, param2, param3);
 
-        // EEPROM.
-        byte val = EEPROM.read(0);
-        Serial.printf("Read %p from EEPROM\r\n", val);
-        EEPROM.write(0, param1);
-        Serial.printf("Wrote %f to EEPROM\r\n", param1);
+//         // EEPROM.
+//         byte val = EEPROM.read(0);
+//         // Serial.printf("Read %p from EEPROM\r\n", val);
+//         EEPROM.write(0, param1);
+//         // Serial.printf("Wrote %f to EEPROM\r\n", param1);
 
-        // Call new_setpoint() with the received angle
-        // bool result = Wrist_Roll.new_setpoint(angle);
-#if TEST_WRIST_ROLL_CYTRON == 1
-        bool result1 = Wrist_Roll.new_setpoint(param1);
-#endif
-#if TEST_WRIST_PITCH_CYTRON == 1
-        bool result2 = Wrist_Pitch.new_setpoint(param1);
-#endif
-#if TEST_END_EFFECTOR_CYTRON == 1
-        bool result3 = End_Effector.new_setpoint(param1);
-#endif
-#if TEST_ELBOW_SERVO == 1
-        bool result4 = Elbow.new_setpoint(param1);
-#endif
-#if TEST_SHOULDER_SERVO == 1
-        bool result5 = Shoulder.new_setpoint(param1);
-#endif
+//         // Call new_setpoint() with the received angle
+//         // bool result = Wrist_Roll.new_setpoint(angle);
+// #if TEST_WRIST_ROLL_CYTRON == 1
+//         bool result1 = Wrist_Roll.new_setpoint(param1);
+// #endif
+// #if TEST_WRIST_PITCH_CYTRON == 1
+//         bool result2 = Wrist_Pitch.new_setpoint(param1);
+// #endif
+// #if TEST_END_EFFECTOR_CYTRON == 1
+//         bool result3 = End_Effector.new_setpoint(param1);
+// #endif
+// #if TEST_ELBOW_SERVO == 1
+//         bool result4 = Elbow.new_setpoint(param1);
+// #endif
+// #if TEST_SHOULDER_SERVO == 1
+//         bool result5 = Shoulder.new_setpoint(param1);
+// #endif
 
-        // Print status.
-#if TEST_WRIST_ROLL_CYTRON == 1
-        Serial.printf("Wrist_Roll new_setpoint at %lf result: %d\r\n", param1, result1);
-#endif
-#if TEST_WRIST_PITCH_CYTRON == 1
-        Serial.printf("Wrist_Pitch new_setpoint at %lf result: %d\r\n", param2, result2);
-#endif
-#if TEST_END_EFFECTOR_CYTRON == 1
-        Serial.printf("End_Effector new_setpoint at %lf result: %d\r\n", param3, result3);
-#endif
-#if TEST_ELBOW_SERVO == 1
-        Serial.printf("Elbow new_setpoint at %lf result: %d\r\n", param1, result4);
-#endif
-#if TEST_SHOULDER_SERVO == 1
-        Serial.printf("Shoulder new_setpoint at %lf result: %d\r\n", param1, result5);
-#endif
-    }
-}
+//         // Print status.
+// #if TEST_WRIST_ROLL_CYTRON == 1
+//         Serial.printf("Wrist_Roll new_setpoint at %lf result: %d\r\n", param1, result1);
+// #endif
+// #if TEST_WRIST_PITCH_CYTRON == 1
+//         // Serial.printf("Wrist_Pitch new_setpoint at %lf result: %d\r\n", param2, result2);
+// #endif
+// #if TEST_END_EFFECTOR_CYTRON == 1
+//         Serial.printf("End_Effector new_setpoint at %lf result: %d\r\n", param3, result3);
+// #endif
+// #if TEST_ELBOW_SERVO == 1
+//         Serial.printf("Elbow new_setpoint at %lf result: %d\r\n", param1, result4);
+// #endif
+// #if TEST_SHOULDER_SERVO == 1
+//         Serial.printf("Shoulder new_setpoint at %lf result: %d\r\n", param1, result5);
+// #endif
+//     }
+// }

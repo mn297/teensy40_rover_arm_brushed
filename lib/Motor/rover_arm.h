@@ -3,6 +3,23 @@
 #define IRQ_DEBUG_PRIORITY 10
 #define BRUSHED_ARM 1
 #define BRUSHLESS_ARM 0
+#define USE_ROS 1
+
+#ifdef USE_ROS
+// struct SerialMock
+// {
+//     template <typename... Args>
+//     void print(Args... args) {}
+//     template <typename... Args>
+//     void println(Args... args) {}
+//     template <typename... Args>
+//     void printf(Args... args) {}
+//     template <typename... Args>
+//     void available(Args... args) {}
+// };
+
+// SerialMock Serial;
+#endif
 
 // CONFIGURATION---------------------------------------------------------------
 #define TEST_ENCODER 0
@@ -15,7 +32,7 @@
 
 #define PID_PERIOD_US 1000
 #define PID_DT (PID_PERIOD_US * 1e-6f)
-#define ROVER_LOOP_PERIOD_MS 250
+#define ROVER_LOOP_PERIOD_MS 10
 
 // TEENSY PINS------------------------------------------------------------------
 #ifdef USE_TEENSY

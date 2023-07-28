@@ -1,0 +1,36 @@
+#include <Arduino.h>
+#include <ros.h>
+#include <std_msgs/String.h>
+
+ros::NodeHandle nodeHandler;
+
+void commandCallback(const std_msgs::String& input_string);
+
+std_msgs::String input_data; // This is what you'll use for the feedback.
+ros::Subscriber<std_msgs::String> ArmCommand("arm24Cmd", commandCallback);
+ros::Publisher ArmFeedback("arm24FB", &input_data);
+
+void commandCallback(const std_msgs::String &input_string) {
+    float val1, val2, val3;
+    if (sscanf(input_string.data, "%f %f %f", &val1, &val2, &val3) == 3) {
+        // Echo back the received values
+        char feedback_buffer[50];
+        snprintf(feedback_buffer, sizeof(feedback_buffer), "%.2f %.2f %.2f", val1, val2, val3);
+        input_data.data = feedback_buffer;
+
+        ArmFeedback.publish(&input_data);
+    }
+    // Else, handle the error or ignore.
+}
+
+void setup() {
+    nodeHandler.initNode();
+    nodeHandler.advertise(ArmFeedback);
+    nodeHandler.subscribe(ArmCommand);
+
+}
+
+void loop() {
+    nodeHandler.spinOnce();
+    delay(10); // Optional: to avoid too frequent spinning.
+}

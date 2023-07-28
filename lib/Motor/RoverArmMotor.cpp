@@ -66,8 +66,8 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     aggKp = aggP;
     aggKi = aggI;
     aggKd = aggD;
-    Serial.println("RoverArmMotor::begin()");
-    Serial.printf("RoverArmMotor::begin() _brake_pin: %d\r\n", _brake_pin);
+    // Serial.println("RoverArmMotor::begin()");
+    // Serial.printf("RoverArmMotor::begin() _brake_pin: %d\r\n", _brake_pin);
     /*------------------Set pin modes------------------*/
     pinMode(_pwm, OUTPUT);
     pinMode(_dir, OUTPUT);
@@ -81,25 +81,25 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
 
     /*------------------Initialize PWM------------------*/
     pwmInstance = new Teensy_PWM(_pwm, _pwm_freq, 0.0f); // 400Hz equals to 2500us period
-    Serial.println("RoverArmMotor::begin() 2");
+    // Serial.println("RoverArmMotor::begin() 2");
 
     /*------------------Initialize timers------------------*/
     delay(500 * DELAY_FACTOR); // wait for the motor to start up
     this->stop();              // stop the motor
     delay(500 * DELAY_FACTOR); // wait for the motor to start up
     this->stop();              // stop the motor
-    Serial.println("_pwm = " + String(_pwm));
-    Serial.println("RoverArmMotor::begin() 3");
+    // Serial.println("_pwm = " + String(_pwm));
+    // Serial.println("RoverArmMotor::begin() 3");
 
     /*------------------Initialize PID------------------*/
     if (escType == CYTRON)
     {
-        Serial.println("RoverArmMotor::begin() 4 CYTRON");
+        // Serial.println("RoverArmMotor::begin() 4 CYTRON");
         internalPIDInstance = new PID(PID_DT, 99.0, -99.0, regP, regI, regD);
     }
     else if (escType == BLUE_ROBOTICS)
     {
-        Serial.println("RoverArmMotor::begin() 4 SERVO");
+        // Serial.println("RoverArmMotor::begin() 4 SERVO");
         internalPIDInstance = new PID(PID_DT, 375.0, -375.0, regP, regI, regD);
     }
 
@@ -113,13 +113,13 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     if (error == -1)
     {
         encoder_error = 1;
-        printf("ERROR: get_current_angle_sw() returned -1 from begin()\r\n");
+        // Serial.printf("ERROR: get_current_angle_sw() returned -1 from begin()\r\n");
         return;
     }
-    Serial.println("Motor current angle: " + String(currentAngle));
+    // Serial.println("Motor current angle: " + String(currentAngle));
     setpoint = currentAngle;
     lastAngle = currentAngle;
-    Serial.println("RoverArmMotor::begin() 5");
+    // Serial.println("RoverArmMotor::begin() 5");
 
     /*------------------Set PID parameters------------------*/
     regKp = regP;
@@ -129,18 +129,18 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     // if(brake)  engage_brake(); //use brake if there is one
     if (_brake_pin != -1)
         engage_brake(); // use brake if there is one
-    Serial.println("RoverArmMotor::begin() 6 BEFORE MASTERING");
+    // Serial.println("RoverArmMotor::begin() 6 BEFORE MASTERING");
     delay(250 * DELAY_FACTOR); // wait for the motor to start up
     this->stop();              // stop the motor
 
     /*------------------Mastering------------------*/
 #if MASTERING == 1
-    Serial.println("RoverArmMotor::begin() 7 Mastering");
+    // Serial.println("RoverArmMotor::begin() 7 Mastering");
     delay(250 * DELAY_FACTOR); // wait for the motor to start up
     this->reverse();
     delay(250 * DELAY_FACTOR); // wait for the motor to start up
     this->reverse();
-    Serial.println("RoverArmMotor::begin() 8");
+    // Serial.println("RoverArmMotor::begin() 8");
 #endif
 
     return;
@@ -160,10 +160,10 @@ void RoverArmMotor::tick()
 /*------------------Check limit pins------------------*/
 // Print limit pins status
 #if DEBUG_ROVER_ARM_MOTOR
-    Serial.println("limit_pin_max = " + String(_limit_pin_max));
-    Serial.println("limit_pin_min = " + String(_limit_pin_min));
-    Serial.printf("RoverArmMotor::tick() limit_pin_max = %d\r\n", digitalRead(_limit_pin_max));
-    Serial.printf("RoverArmMotor::tick() limit_pin_min = %d\r\n", digitalRead(_limit_pin_min));
+    // Serial.println("limit_pin_max = " + String(_limit_pin_max));
+    // Serial.println("limit_pin_min = " + String(_limit_pin_min));
+    // Serial.printf("RoverArmMotor::tick() limit_pin_max = %d\r\n", digitalRead(_limit_pin_max));
+    // Serial.printf("RoverArmMotor::tick() limit_pin_min = %d\r\n", digitalRead(_limit_pin_min));
 #endif
     if (_limit_pin_max != -1 && _limit_pin_min != -1)
     {
@@ -171,9 +171,9 @@ void RoverArmMotor::tick()
         {
             this->stop();
             this->reverse(10);
-            Serial.println("REVERSING!");
+            // Serial.println("REVERSING!");
 #if DEBUG_ROVER_ARM_MOTOR
-            Serial.println("RoverArmMotor::tick() _limit_pin_max");
+            // Serial.println("RoverArmMotor::tick() _limit_pin_max");
 #endif
             return;
         }
@@ -182,7 +182,7 @@ void RoverArmMotor::tick()
             this->stop();
             this->forward(10);
 #if DEBUG_ROVER_ARM_MOTOR
-            Serial.println("RoverArmMotor::tick() _limit_pin_min");
+            // Serial.println("RoverArmMotor::tick() _limit_pin_min");
 #endif
             return;
         }
@@ -211,7 +211,7 @@ void RoverArmMotor::tick()
     if (wrist_waist)
     {
         diff = min(abs(currentAngle - setpoint), angle_full_turn - abs(currentAngle - setpoint));
-        Serial.printf("diff = %f\r\n", diff);
+        // Serial.printf("diff = %f\r\n", diff);
     }
     else
     {
@@ -220,7 +220,7 @@ void RoverArmMotor::tick()
     if (diff < (0.8f + fight_gravity * 3.0f))
     {
 #if DEBUG_ROVER_ARM_MOTOR == 1
-        Serial.println("RoverArmMotor::tick() diff < 0.5");
+        // Serial.println("RoverArmMotor::tick() diff < 0.5");
 #endif
         output = 0;
         this->engage_brake();
@@ -252,14 +252,14 @@ void RoverArmMotor::tick()
             {
                 output = internalPIDInstance->calculate(setpoint, input + angle_full_turn); // buff it 360 to go backwards
 #if DEBUG_ROVER_ARM_MOTOR_TICK == 1
-                Serial.printf("Case 1, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
+                // Serial.printf("Case 1, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
 #endif
             }
             else
             {
                 output = internalPIDInstance->calculate(setpoint, input); // wrapped around so bigger so no need buff 360
 #if DEBUG_ROVER_ARM_MOTOR_TICK == 1
-                Serial.printf("Case 2, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
+                // Serial.printf("Case 2, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
 #endif
             }
         }
@@ -270,14 +270,14 @@ void RoverArmMotor::tick()
             {
                 output = internalPIDInstance->calculate(setpoint, input); //  wrapped around so bigger so no need nerf 360
 #if DEBUG_ROVER_ARM_MOTOR_TICK == 1
-                Serial.printf("Case 3, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
+                // Serial.printf("Case 3, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
 #endif
             }
             else
             {
                 output = internalPIDInstance->calculate(setpoint, input - angle_full_turn); // nerf it 360 to go forwards
 #if DEBUG_ROVER_ARM_MOTOR_TICK == 1
-                Serial.printf("Case 4, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
+                // Serial.printf("Case 4, setpoint = %f, input = %f, output = %f\r\n", setpoint, input, output);
 #endif
             }
         }
@@ -326,15 +326,15 @@ void RoverArmMotor::tick()
                 {
                     output *= 1.0f;
                 }
-                Serial.printf("BEFORE RoverArmMotor::tick() output = %f\r\n", output);
+                // Serial.printf("BEFORE RoverArmMotor::tick() output = %f\r\n", output);
                 output = max(output, -220.0f);
-                Serial.printf("AFTER RoverArmMotor::tick() output = %f\r\n", output);
+                // Serial.printf("AFTER RoverArmMotor::tick() output = %f\r\n", output);
             }
             else
             {
                 // Light braking.
                 output = -25.0f;
-                Serial.printf("BRAKING output = %f\r\n", output);
+                // Serial.printf("BRAKING output = %f\r\n", output);
             }
         }
 
@@ -396,7 +396,7 @@ void RoverArmMotor::stop()
     if (escType == CYTRON)
     {
 #if DEBUG_ROVER_ARM_MOTOR == 1
-        Serial.println("RoverArmMotor::stop() CYTRON");
+        // Serial.println("RoverArmMotor::stop() CYTRON");
 #endif
         pwmInstance->setPWM(_pwm, _pwm_freq, 0);
         return;
@@ -404,7 +404,7 @@ void RoverArmMotor::stop()
     else if (escType == BLUE_ROBOTICS)
     {
 #if DEBUG_ROVER_ARM_MOTOR == 1
-        Serial.println("RoverArmMotor::stop() SERVO");
+        // Serial.println("RoverArmMotor::stop() SERVO");
 #endif
         pwmInstance->setPWM(_pwm, _pwm_freq, BLUE_ROBOTICS_STOP_DUTY_CYCLE);
         return;
@@ -441,7 +441,7 @@ double RoverArmMotor::get_setpoint()
 // Remove gear_ration burden from user.
 bool RoverArmMotor::new_setpoint(double angle)
 {
-    Serial.printf("RoverArmMotor::new_setpoint() angle = %f\r\n", angle);
+    // Serial.printf("RoverArmMotor::new_setpoint() angle = %f\r\n", angle);
     double temp_setpoint = angle * gear_ratio;
     // Extra step for wrist_waist.
     if (wrist_waist)
@@ -553,7 +553,7 @@ int RoverArmMotor::get_current_angle_multi(double *angle)
     if (error == -1)
     {
 #if DEBUG_ROVER_ARM_MOTOR == 1
-        printf("ERROR: getTurnCounterSPI() returned -1 from get_current_angle_multi()\r\n");
+        Serial.printf("ERROR: getTurnCounterSPI() returned -1 from get_current_angle_multi()\r\n");
 #endif
         return -1;
     }
@@ -572,7 +572,7 @@ int RoverArmMotor::get_current_angle_sw(double *angle)
     {
         encoder_error = 1;
 #if DEBUG_ROVER_ARM_MOTOR == 1
-        printf("ERROR: get_current_angle_multi() returned -1 from get_current_angle_sw()\r\n");
+        Serial.printf("ERROR: get_current_angle_multi() returned -1 from get_current_angle_sw()\r\n");
 #endif
         return -1;
     }
