@@ -4,6 +4,7 @@
 #include "AMT22.h"
 #include <Arduino.h>
 #include <SPI.h>
+#include <EEPROM.h>
 
 // Standard includes.
 #include <stdint.h>
@@ -27,14 +28,6 @@ int is_turning = 0;
 IntervalTimer rover_arm_timer;
 volatile bool spiLock = false;     // Lock for SPI
 volatile bool tickRequest = false; // Indicates if tick() wants to use SPI
-
-/*---------------------UART---------------------*/
-const int RX_BUFFER_SIZE = 32;
-uint8_t rx_data[8]; // 1 byte
-char rx_buffer[RX_BUFFER_SIZE];
-uint32_t rx_index = 0;
-char command_buffer[20];
-double param1, param2, param3;
 
 void print_motor(char *msg, void *pMotor)
 {
@@ -235,12 +228,7 @@ void rover_arm_loop()
     unsigned long currentMillis = millis(); // get the current "time"
 
     if (currentMillis - lastPrint >= ROVER_LOOP_PERIOD_MS)
-    { // If 500ms has passed since the last print operation
-#if TEST_ENCODER == 1
-        uint16_t encoderData_1 = 0;
-        encoderData_1 = getPositionSPI(CS1, 12);
-        Serial.printf("encoder 1 gives %d\r\n", encoderData_1);
-#endif
+    {
 #if DEBUG_PRINT_MOTOR == 1
 #if TEST_WRIST_ROLL_CYTRON == 1
         print_motor("SP WRIST_ROLL_CYTRON", &Wrist_Roll);
@@ -488,4 +476,64 @@ void attach_all_interrupts()
     attachInterrupt(digitalPinToInterrupt(LIMIT_WAIST_MAX), limit_waist_max_int, CHANGE);
     attachInterrupt(digitalPinToInterrupt(LIMIT_WAIST_MIN), limit_waist_min_int, CHANGE);
 #endif
+}
+
+void serialEvent()
+{
+    while (Serial.available())
+    {
+        // Read the incoming string
+        String incomingString = Serial.readStringUntil('\n');
+
+        // Check if the incoming string starts with "setpoint"
+        // Initialize parameters
+        double param1, param2, param3;
+
+        // Use sscanf to extract the parameters
+        sscanf(incomingString.c_str(), "%lf %lf %lf", &param1, &param2, &param3);
+
+        // Now you can use param1, param2, param3
+        Serial.printf("Received angles: %f, %f, %f\r\n", param1, param2, param3);
+
+        // EEPROM.
+        byte val = EEPROM.read(0);
+        Serial.printf("Read %p from EEPROM\r\n", val);
+        EEPROM.write(0, param1);
+        Serial.printf("Wrote %f to EEPROM\r\n", param1);
+
+        // Call new_setpoint() with the received angle
+        // bool result = Wrist_Roll.new_setpoint(angle);
+#if TEST_WRIST_ROLL_CYTRON == 1
+        bool result1 = Wrist_Roll.new_setpoint(param1);
+#endif
+#if TEST_WRIST_PITCH_CYTRON == 1
+        bool result2 = Wrist_Pitch.new_setpoint(param1);
+#endif
+#if TEST_END_EFFECTOR_CYTRON == 1
+        bool result3 = End_Effector.new_setpoint(param1);
+#endif
+#if TEST_ELBOW_SERVO == 1
+        bool result4 = Elbow.new_setpoint(param1);
+#endif
+#if TEST_SHOULDER_SERVO == 1
+        bool result5 = Shoulder.new_setpoint(param1);
+#endif
+
+        // Print status.
+#if TEST_WRIST_ROLL_CYTRON == 1
+        Serial.printf("Wrist_Roll new_setpoint at %lf result: %d\r\n", param1, result1);
+#endif
+#if TEST_WRIST_PITCH_CYTRON == 1
+        Serial.printf("Wrist_Pitch new_setpoint at %lf result: %d\r\n", param2, result2);
+#endif
+#if TEST_END_EFFECTOR_CYTRON == 1
+        Serial.printf("End_Effector new_setpoint at %lf result: %d\r\n", param3, result3);
+#endif
+#if TEST_ELBOW_SERVO == 1
+        Serial.printf("Elbow new_setpoint at %lf result: %d\r\n", param1, result4);
+#endif
+#if TEST_SHOULDER_SERVO == 1
+        Serial.printf("Shoulder new_setpoint at %lf result: %d\r\n", param1, result5);
+#endif
+    }
 }

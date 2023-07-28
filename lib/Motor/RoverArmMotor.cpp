@@ -84,11 +84,11 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     Serial.println("RoverArmMotor::begin() 2");
 
     /*------------------Initialize timers------------------*/
-    delay(500 * DELAY_FACTOR);                // wait for the motor to start up
-    this->stop();                             // stop the motor
-    delay(500 * DELAY_FACTOR);                // wait for the motor to start up
-    this->stop();                             // stop the motor
-    Serial.println("_pwm = " + String(_pwm)); // mn297
+    delay(500 * DELAY_FACTOR); // wait for the motor to start up
+    this->stop();              // stop the motor
+    delay(500 * DELAY_FACTOR); // wait for the motor to start up
+    this->stop();              // stop the motor
+    Serial.println("_pwm = " + String(_pwm));
     Serial.println("RoverArmMotor::begin() 3");
 
     /*------------------Initialize PID------------------*/
@@ -287,10 +287,6 @@ void RoverArmMotor::tick()
         output = internalPIDInstance->calculate(setpoint, input); // return value stored in output
     }
 
-    //------------------SAFETY------------------//
-    //    if (currentAngle >= (max_angle - 2) || currentAngle <= (min_angle + 2))
-    //        output = 0.0;
-
     //------------------Write to motor------------------//
     if (escType == CYTRON)
     {
@@ -319,35 +315,6 @@ void RoverArmMotor::tick()
     // Output range from 1100-1900 us of a 2500 us period
     else if (escType == BLUE_ROBOTICS)
     {
-        //------------------DEADBAND------------------//
-        // double temp_output = abs(output);
-        // if (temp_output <= DEADBAND_SERVO - 10.0f)
-        // {
-        //     temp_output = 0;
-        // }
-        // else if ((temp_output > DEADBAND_SERVO - 10.0f) && (temp_output <= DEADBAND_SERVO))
-        // {
-        //     // Enhance output.
-        //     if (output > 0)
-        //     {
-        //         temp_output = (output + DEADBAND_SERVO / 2);
-        //     }
-        //     else
-        //     {
-        //         temp_output = (output - DEADBAND_SERVO / 2);
-        //     }
-        // }
-        // else
-        // {
-        //     // if (output > 0)
-        //     // {
-        //     //     temp_output = (output + deadband / 2);
-        //     // }
-        //     // else
-        //     // {
-        //     //     temp_output = (output - deadband / 2);
-        //     // }
-        // }
         this->disengage_brake();
         if (fight_gravity)
         {
@@ -359,10 +326,6 @@ void RoverArmMotor::tick()
                 {
                     output *= 1.0f;
                 }
-                // if (diff < 3.0f)
-                // {
-                //     output += 20.0f;
-                // }
                 Serial.printf("BEFORE RoverArmMotor::tick() output = %f\r\n", output);
                 output = max(output, -220.0f);
                 Serial.printf("AFTER RoverArmMotor::tick() output = %f\r\n", output);
@@ -500,13 +463,6 @@ bool RoverArmMotor::new_setpoint(double angle)
     }
 }
 
-int RoverArmMotor::getDirection()
-{
-    // return (digitalRead(dir) == HIGH) ? FWD : REV;
-    // return (// HAL_GPIO_ReadPin(dir.port, dir.pin) == GPIO_PIN_SET) ? FWD : REV; // mn297, TODO check if this is correct
-    return;
-}
-
 void RoverArmMotor::set_gear_ratio(double ratio)
 {
     gear_ratio = ratio;
@@ -565,7 +521,6 @@ uint32_t RoverArmMotor::get_turns_encoder()
 
 void RoverArmMotor::disengage_brake()
 {
-    // Serial.printf("RoverArmMotor::disengage_brake(), %d\r\n", _brake_pin);
     if (_brake_pin != -1)
     {
         digitalWrite(_brake_pin, HIGH);
@@ -576,7 +531,6 @@ void RoverArmMotor::disengage_brake()
 
 void RoverArmMotor::engage_brake()
 {
-    // Serial.printf("RoverArmMotor::engage_brake(), %d\r\n", _brake_pin);
     if (_brake_pin != -1)
     {
         digitalWrite(_brake_pin, LOW);
@@ -585,19 +539,10 @@ void RoverArmMotor::engage_brake()
     return;
 }
 
-// double RoverArmMotor::get_current_angle_avg()
-//{ // UNSUPPORTED
-//     // return currentAngle / gear_ratio;
-//     uint16_t encoderData = getPositionSPI(spi, encoder.port, encoder.pin, 12, nullptr);  // timer not used, so nullptr
-//     adcResult = internalAveragerInstance.reading(encoderData);                           // implicit cast to int
-//     currentAngle = mapFloat((float)adcResult, MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f); // mn297 potentiometer encoder
-//     return currentAngle / gear_ratio;
-// }
-
 double RoverArmMotor::get_current_angle()
-{                                                                                          // mn297
-    uint16_t encoderData = getPositionSPI(_encoder, 12);                                   // timer not used, so nullptr
-    currentAngle = mapFloat((float)encoderData, MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f); // mn297 potentiometer encoder
+{
+    uint16_t encoderData = getPositionSPI(_encoder, 12);
+    currentAngle = mapFloat((float)encoderData, MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f);
     return currentAngle;
 }
 
@@ -613,7 +558,7 @@ int RoverArmMotor::get_current_angle_multi(double *angle)
         return -1;
     }
 
-    _angle_raw = mapFloat((float)result_arr[0], MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f); // mn297 potentiometer encoder
+    _angle_raw = mapFloat((float)result_arr[0], MIN_ADC_VALUE, MAX_ADC_VALUE, 0, 359.99f);
     _turns = result_arr[1];
     *angle = _angle_raw + 360 * _turns;
 
@@ -672,13 +617,6 @@ int RoverArmMotor::get_turn_count()
     int16_t result_arr[2];
     getTurnCounterSPI(result_arr, _encoder, 12); // timer not used, so nullptr
     return result_arr[1];
-}
-
-void RoverArmMotor::WatchdogISR()
-{
-    // Get current angle
-
-    // Set setpoint to that angle
 }
 
 void RoverArmMotor::set_limit_pins(int limit_pin_max, int limit_pin_min)
