@@ -68,7 +68,7 @@ ros::Subscriber<std_msgs::Float32MultiArray> ArmCommand("arm24Cmd", commandCallb
 // Source: https://mcgill.sharepoint.com/sites/McGillRobotics_Group/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FMcGillRobotics%5FGroup%2FShared%20Documents%2FRover%20Project%2FSoftware%2FROS%20Message%20Instructions%2Epdf&parent=%2Fsites%2FMcGillRobotics%5FGroup%2FShared%20Documents%2FRover%20Project%2FSoftware&p=true&ct=1690126169268&or=Teams%2DHL&ga=1
 void commandCallback(const std_msgs::Float32MultiArray &command)
 {
-    char feedback_buffer[256];
+    // char feedback_buffer[256];
 #if BRUSHLESS_ARM == 1
     Elbow.new_setpoint((double)command.data[0]);
     Shoulder.new_setpoint((double)command.data[1]);
@@ -87,19 +87,19 @@ void commandCallback(const std_msgs::Float32MultiArray &command)
     // Wrist_Roll.new_setpoint((double)command.data[1]);
     Wrist_Pitch.new_setpoint((double)command.data[2]);
 
-    feedback.data_length = 3;
+    // feedback.data_length = 3;
 
     noInterrupts();
     // feedback.data[0] = (float)End_Effector.currentAngle;
     // feedback.data[1] = (float)Wrist_Roll.currentAngle;
     // feedback.data[2] = (float)Wrist_Pitch.currentAngle;
-    feedback.data[0] = 0;
-    feedback.data[1] = 0;
-    feedback.data[2] = 0;
+    // feedback.data[0] = 0;
+    // feedback.data[1] = 0;
+    // feedback.data[2] = 0;
     interrupts();
 #endif
 
-    ArmFeedback.publish(&feedback);
+    // ArmFeedback.publish(&feedback);
 }
 
 #define MIN_FLOAT -std::numeric_limits<float>::infinity()
@@ -200,7 +200,7 @@ void rover_arm_setup(void)
     /*---------------------ROS---------------------*/
     // Initialize ROS Node and advertise the feedback publisher.
     nodeHandler.initNode();
-    nodeHandler.advertise(ArmFeedback);
+    // nodeHandler.advertise(ArmFeedback);
     nodeHandler.advertise(ArmFeedback_Debug);
     nodeHandler.subscribe(ArmCommand);
 
