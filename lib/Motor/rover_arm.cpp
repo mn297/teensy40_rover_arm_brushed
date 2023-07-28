@@ -51,61 +51,55 @@ RoverArmMotor Waist(PWM3, -1, CS3, BLUE_ROBOTICS, WAIST_MIN_ANGLE, WAIST_MAX_ANG
 
 /*--------------------- ROS --------------------*/
 ros::NodeHandle nodeHandler;
-std_msgs::String input_data; // This is what you'll use for the feedback.
-void commandCallback(const std_msgs::String &input_string);
+std_msgs::Float32MultiArray feedback;
+std_msgs::String motor_msg;
+void commandCallback(const std_msgs::Float32MultiArray &command);
 
 #if BRUSHLESS_ARM == 1
-ros::Publisher ArmFeedback("arm12FB", &input_data);
-// ros::Subscriber<std_msgs::Float32MultiArray> ArmCommand("arm12Cmd", commandCallback);
-ros::Subscriber<std_msgs::String> ArmCommand("arm12Cmd", commandCallback);
+ros::Publisher ArmFeedback("arm12FB", &motor_msg);
+ros::Publisher ArmFeedback_Debug("arm12FB_debug", &motor_msg);
+ros::Subscriber<std_msgs::Float32MultiArray> ArmCommand("arm12Cmd", commandCallback);
 #elif BRUSHED_ARM == 1
-ros::Publisher ArmFeedback("arm24FB", &input_data);
-// ros::Subscriber<std_msgs::Float32MultiArray> ArmCommand("arm24Cmd", commandCallback);
-ros::Subscriber<std_msgs::String> ArmCommand("arm24Cmd", commandCallback);
+ros::Publisher ArmFeedback("arm24FB", &feedback);
+ros::Publisher ArmFeedback_Debug("arm24FB_debug", &motor_msg);
+ros::Subscriber<std_msgs::Float32MultiArray> ArmCommand("arm24Cmd", commandCallback);
 #endif
 
 // Source: https://mcgill.sharepoint.com/sites/McGillRobotics_Group/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FMcGillRobotics%5FGroup%2FShared%20Documents%2FRover%20Project%2FSoftware%2FROS%20Message%20Instructions%2Epdf&parent=%2Fsites%2FMcGillRobotics%5FGroup%2FShared%20Documents%2FRover%20Project%2FSoftware&p=true&ct=1690126169268&or=Teams%2DHL&ga=1
-void commandCallback(const std_msgs::String &msg)
+void commandCallback(const std_msgs::Float32MultiArray &command)
 {
-    float val1, val2, val3;
-    int parsed_values = sscanf(msg.data, "%f %f %f", &val1, &val2, &val3);
-
-    if (parsed_values == 3) // Check if all three floats were parsed successfully
-    {
+    char feedback_buffer[256];
 #if BRUSHLESS_ARM == 1
-        Elbow.newSetpoint((double)val1);
-        Shoulder.newSetpoint((double)val2);
-        Waist.newSetpoint((double)val3);
+    Elbow.new_setpoint((double)command.data[0]);
+    Shoulder.new_setpoint((double)command.data[1]);
+    Waist.new_setpoint((double)command.data[2]);
 
-        noInterrupts();
-        char feedback_buffer[50];
-        snprintf(feedback_buffer, sizeof(feedback_buffer), "%.2f %.2f %.2f", val1, val2, val3);
-        input_data.data = feedback_buffer;
-        ArmFeedback.publish(&input_data);
-        interrupts();
+    feedback.data_length = 3;
+
+    noInterrupts();
+    feedback.data[0] = (float)Elbow.currentAngle;
+    feedback.data[1] = (float)Shoulder.currentAngle;
+    feedback.data[2] = (float)Waist.currentAngle;
+    interrupts();
+
 #elif BRUSHED_ARM == 1
-        // End_Effector.new_setpoint((double)val1);
-        // Wrist_Roll.new_setpoint((double)val2);
-        Wrist_Pitch.new_setpoint((double)val3);
+    // End_Effector.new_setpoint((double)command.data[0]);
+    // Wrist_Roll.new_setpoint((double)command.data[1]);
+    Wrist_Pitch.new_setpoint((double)command.data[2]);
 
-        noInterrupts();
-        // feedback.data[0] = (float) End_Effector.currentAngle;
-        // feedback.data[1] = (float) Wrist_Roll.currentAngle;
-        // feedback.data[2] = (float)Wrist_Pitch.currentAngle;
-        char feedback_buffer[50];
-        snprintf(feedback_buffer, sizeof(feedback_buffer), "%.2f %.2f %.2f", val1, val2, val3);
-        input_data.data = feedback_buffer;
-        ArmFeedback.publish(&input_data);
-        interrupts();
+    feedback.data_length = 3;
+
+    noInterrupts();
+    // feedback.data[0] = (float)End_Effector.currentAngle;
+    // feedback.data[1] = (float)Wrist_Roll.currentAngle;
+    // feedback.data[2] = (float)Wrist_Pitch.currentAngle;
+    feedback.data[0] = 0;
+    feedback.data[1] = 0;
+    feedback.data[2] = 0;
+    interrupts();
 #endif
-    }
-    else
-    {
-        // Error in parsing the string
-        // You can handle it accordingly
-    }
 
-    ArmFeedback.publish(&msg); // Echoing back the same string message.
+    ArmFeedback.publish(&feedback);
 }
 
 #define MIN_FLOAT -std::numeric_limits<float>::infinity()
@@ -125,32 +119,39 @@ volatile bool tickRequest = false; // Indicates if tick() wants to use SPI
 
 void print_motor(char *msg, void *pMotor)
 {
-    // #if TICK == 0
-    //     double current_angle_sw;
-    //     ((RoverArmMotor *)pMotor)->get_current_angle_sw(&current_angle_sw);
-    // #endif
-    //     printf("%s sp %.2f, angle_sw %.2f, angle_multi %.2f, angle_raw %.2f, turns %d, output %.2f, zero_angle_sw %.2f, gear_ratio %.2f",
-    //            msg,
-    //            ((RoverArmMotor *)pMotor)->setpoint,
-    // #if TICK
-    //            ((RoverArmMotor *)pMotor)->currentAngle,
-    // #else
-    //            current_angle_sw,
-    // #endif
-    //            ((RoverArmMotor *)pMotor)->current_angle_multi,
-    //            ((RoverArmMotor *)pMotor)->_angle_raw,
-    //            ((RoverArmMotor *)pMotor)->_turns,
-    //            ((RoverArmMotor *)pMotor)->output,
-    //            ((RoverArmMotor *)pMotor)->zero_angle_sw,
-    //            ((RoverArmMotor *)pMotor)->gear_ratio);
-    //     if (((RoverArmMotor *)pMotor)->encoder_error)
-    //     {
-    //         printf(" (ERROR)\r\n");
-    //     }
-    //     else
-    //     {
-    //         printf("\r\n");
-    //     }
+    char buffer[512]; // Ensure this is large enough to hold the entire formatted string
+
+#if TICK == 0
+    double current_angle_sw;
+    ((RoverArmMotor *)pMotor)->get_current_angle_sw(&current_angle_sw);
+#endif
+
+    sprintf(buffer, "%s sp %.2f, angle_sw %.2f, angle_multi %.2f, angle_raw %.2f, turns %d, output %.2f, zero_angle_sw %.2f, gear_ratio %.2f",
+            msg,
+            ((RoverArmMotor *)pMotor)->setpoint,
+#if TICK
+            ((RoverArmMotor *)pMotor)->currentAngle,
+#else
+            current_angle_sw,
+#endif
+            ((RoverArmMotor *)pMotor)->current_angle_multi,
+            ((RoverArmMotor *)pMotor)->_angle_raw,
+            ((RoverArmMotor *)pMotor)->_turns,
+            ((RoverArmMotor *)pMotor)->output,
+            ((RoverArmMotor *)pMotor)->zero_angle_sw,
+            ((RoverArmMotor *)pMotor)->gear_ratio);
+
+    if (((RoverArmMotor *)pMotor)->encoder_error)
+    {
+        strcat(buffer, " (ERROR)\r\n");
+    }
+    else
+    {
+        strcat(buffer, "\r\n");
+    }
+
+    motor_msg.data = buffer;
+    ArmFeedback_Debug.publish(&motor_msg);
 }
 
 void rover_arm_timer_routine()
@@ -200,6 +201,7 @@ void rover_arm_setup(void)
     // Initialize ROS Node and advertise the feedback publisher.
     nodeHandler.initNode();
     nodeHandler.advertise(ArmFeedback);
+    nodeHandler.advertise(ArmFeedback_Debug);
     nodeHandler.subscribe(ArmCommand);
 
     /*---WRIST_ROLL_CYTRON setup---*/
@@ -287,47 +289,51 @@ void rover_arm_loop()
     if (tickRequest)
     {
         // If tick() wants to access SPI, defer the SPI access
-        // from the main loop and handle it in tick()
+        // from the main loop and handle it in tick().
         interrupts();
         return;
     }
     spiLock = true;
     interrupts();
 
-    static unsigned long lastPrint = 0;     // Initialize lastPrint variable
+    static unsigned long ros_loop = 0;      // Initialize lastPrint variable
+    static unsigned long print_loop = 0;    // Initialize lastPrint variable
     unsigned long currentMillis = millis(); // get the current "time"
 
-    if (currentMillis - lastPrint >= ROVER_LOOP_PERIOD_MS)
+    if (currentMillis - ros_loop >= ROS_LOOP_PERIOD_MS)
     {
         nodeHandler.spinOnce();
+        if (currentMillis - print_loop >= PRINT_LOOP_PERIOD_MS)
+        {
 #if DEBUG_PRINT_MOTOR == 1
 #if TEST_WRIST_ROLL_CYTRON == 1
-        print_motor("SP WRIST_ROLL_CYTRON", &Wrist_Roll);
+            print_motor("SP WRIST_ROLL_CYTRON", &Wrist_Roll);
 #endif
 
 #if TEST_WRIST_PITCH_CYTRON == 1
-        print_motor("SP WRIST_PITCH_CYTRON", &Wrist_Pitch);
+            print_motor("SP WRIST_PITCH_CYTRON", &Wrist_Pitch);
 #endif
 
 #if TEST_END_EFFECTOR_CYTRON == 1
-        print_motor("SP END_EFFECTOR_CYTRON", &End_Effector);
+            print_motor("SP END_EFFECTOR_CYTRON", &End_Effector);
 #endif
 
 #if TEST_ELBOW_SERVO == 1
-        print_motor("SP Elbow", &Elbow);
+            print_motor("SP Elbow", &Elbow);
 #endif
 
 #if TEST_SHOULDER_SERVO == 1
-        print_motor("SP Shoulder", &Shoulder);
+            print_motor("SP Shoulder", &Shoulder);
 #endif
 
 #if TEST_WAIST_SERVO == 1
-        print_motor("SP Waist", &Waist);
+            print_motor("SP Waist", &Waist);
 #endif
 
 #endif
-        lastPrint = currentMillis; // Update the lastPrint time
-        // Serial.println();
+            print_loop = currentMillis;
+        }
+        ros_loop = currentMillis;
     }
     spiLock = false;
 }

@@ -32,7 +32,8 @@
 
 #define PID_PERIOD_US 1000
 #define PID_DT (PID_PERIOD_US * 1e-6f)
-#define ROVER_LOOP_PERIOD_MS 10
+#define ROS_LOOP_PERIOD_MS 10
+#define PRINT_LOOP_PERIOD_MS 250
 
 // TEENSY PINS------------------------------------------------------------------
 #ifdef USE_TEENSY
