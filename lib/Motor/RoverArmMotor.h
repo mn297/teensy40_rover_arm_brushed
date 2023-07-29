@@ -112,6 +112,8 @@ public: // TESTING only
     double angle_full_turn;
 
     int encoder_error;
+
+    // Stop at every tick(), this is useful to keep the SERVO ESC running.
     int stop_tick;
     int fight_gravity;
     int fight_gravity_2;

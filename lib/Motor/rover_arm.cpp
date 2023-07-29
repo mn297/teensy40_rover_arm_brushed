@@ -71,7 +71,7 @@ RoverArmMotor Wrist_Pitch(PWM2, DIR2, CS2, CYTRON, WRIST_PITCH_MIN_ANGLE, WRIST_
 
 /*---------------------END_EFFECTOR_CYTRON---------------------*/
 #if TEST_END_EFFECTOR_CYTRON == 1
-RoverArmMotor End_Effector(&hspi1, CYTRON_PWM_1, CYTRON_DIR_1, AMT22_1, CYTRON, 0, 359.99f);
+RoverArmMotor End_Effector(PWM3, DIR3, -1, CYTRON, MIN_FLOAT, MAX_FLOAT);
 #endif
 
 /*---------------------ELBOW_SERVO DECLARATIONS---------------------*/
@@ -101,6 +101,7 @@ void rover_arm_timer_routine()
     }
     spiLock = true;
     interrupts();
+
 #if TICK == 1
 #if TEST_WRIST_ROLL_CYTRON == 1
     Wrist_Roll.tick();
@@ -109,7 +110,7 @@ void rover_arm_timer_routine()
     Wrist_Pitch.tick();
 #endif
 #if TEST_END_EFFECTOR_CYTRON == 1
-    End_Effector.tick();
+    // End_Effector.tick();
 #endif
 #if TEST_ELBOW_SERVO == 1
     Elbow.tick();
@@ -121,6 +122,7 @@ void rover_arm_timer_routine()
     Waist.tick();
 #endif
 #endif
+
     spiLock = false;
     tickRequest = false;
 }
@@ -135,11 +137,13 @@ void rover_arm_setup(void)
     /*---WRIST_ROLL_CYTRON setup---*/
 #if TEST_WRIST_ROLL_CYTRON == 1
     Wrist_Roll.wrist_waist = 1;
+    // Wrist_Roll.stop_tick = 1;
     Wrist_Roll.set_gear_ratio(WRIST_ROLL_GEAR_RATIO);
     Wrist_Roll.setAngleLimits(WRIST_ROLL_MIN_ANGLE, WRIST_ROLL_MAX_ANGLE);
-    // Wrist_Roll.stop_tick = 1;
+
     Wrist_Roll.begin(REG_KP_WRIST_ROLL, REG_KI_WRIST_ROLL, REG_KD_WRIST_ROLL,
                      REG_KP_WRIST_ROLL_AGG, REG_KI_WRIST_ROLL_AGG, REG_KD_WRIST_ROLL_AGG);
+
     // Assume at zero angle at startup.
     Wrist_Roll.set_current_as_zero_angle_sw();
     Wrist_Roll.new_setpoint(0.0);
@@ -148,13 +152,16 @@ void rover_arm_setup(void)
     /*---WRIST_PITCH_CYTRON setup---*/
 #if TEST_WRIST_PITCH_CYTRON == 1
     Wrist_Pitch.wrist_waist = 0;
+    // Wrist_Pitch.stop_tick = 1;
     Wrist_Pitch.set_gear_ratio(WRIST_PITCH_GEAR_RATIO);
     Wrist_Pitch.setAngleLimits(WRIST_PITCH_MIN_ANGLE, WRIST_PITCH_MAX_ANGLE);
-    // Wrist_Pitch.reset_encoder();
-    // Wrist_Pitch.stop_tick = 1;
     Wrist_Pitch.set_safety_pins(-1, LIMIT_WRIST_PITCH_MAX, LIMIT_WRIST_PITCH_MIN);
+
     Wrist_Pitch.begin(REG_KP_WRIST_PITCH, REG_KI_WRIST_PITCH, REG_KD_WRIST_PITCH,
                       REG_KP_WRIST_PITCH_AGG, REG_KI_WRIST_PITCH_AGG, REG_KD_WRIST_PITCH_AGG);
+
+    Wrist_Pitch.reset_encoder();
+    Wrist_Pitch.set_zero_angle();
     Wrist_Pitch.set_current_as_zero_angle_sw(WRIST_PITCH_ZERO_ANGLE);
     Wrist_Pitch.new_setpoint(0.0);
 #endif
@@ -163,24 +170,18 @@ void rover_arm_setup(void)
 #if TEST_END_EFFECTOR_CYTRON == 1
     End_Effector.wrist_waist = 0;
     End_Effector.setAngleLimits(MIN_FLOAT, MAX_FLOAT);
-    // End_Effector.reset_encoder();
-    End_Effector.begin(regKp_end_effector, regKi_end_effector, regKd_end_effector);
-    End_Effector.reverse(100);
-#if SKIP_MASTERING == 1
-    End_Effector.stop();
-    End_Effector.set_current_as_zero_angle_sw();
-    End_Effector.new_setpoint(0.0);
-#endif
+    End_Effector.begin(0, 0, 0, 0, 0, 0);
 #endif
 
     /* ELBOW_SERVO setup */
 #if TEST_ELBOW_SERVO == 1
     Elbow.setAngleLimits(ELBOW_MIN_ANGLE, ELBOW_MAX_ANGLE);
-    // Elbow.reset_encoder();
     Elbow.stop_tick = 1;
     Elbow.fight_gravity = 1;
     Elbow.set_safety_pins(ELBOW_BRAKE, LIMIT_ELBOW_MAX, LIMIT_ELBOW_MIN);
+
     Elbow.begin(REG_KP_ELBOW, REG_KI_ELBOW, REG_KD_ELBOW, REG_KP_ELBOW_AGG, REG_KI_ELBOW_AGG, REG_KD_ELBOW_AGG);
+
     Elbow.reset_encoder();
     Elbow.set_zero_angle();
     Elbow.set_current_as_zero_angle_sw(ELBOW_ZERO_ANGLE);
@@ -190,10 +191,13 @@ void rover_arm_setup(void)
     /* SHOULDER_SERVO setup */
 #if TEST_SHOULDER_SERVO == 1
     Shoulder.setAngleLimits(SHOULDER_MIN_ANGLE, SHOULDER_MAX_ANGLE);
-    // Shoulder.reset_encoder();
     Shoulder.stop_tick = 1;
     Shoulder.set_safety_pins(SHOULDER_BRAKE, LIMIT_SHOULDER_MAX, LIMIT_SHOULDER_MIN);
+
     Shoulder.begin(REG_KP_SHOULDER, REG_KI_SHOULDER, REG_KD_SHOULDER, REG_KP_SHOULDER_AGG, REG_KI_SHOULDER_AGG, REG_KD_SHOULDER_AGG);
+
+    Shoulder.reset_encoder();
+    Shoulder.set_zero_angle();
     Shoulder.set_current_as_zero_angle_sw(SHOULDER_ZERO_ANGLE);
     Shoulder.new_setpoint(0.0);
 #endif
@@ -201,9 +205,16 @@ void rover_arm_setup(void)
     /*---WAIST_SERVO setup---*/
 #if TEST_WAIST_SERVO == 1
     Waist.wrist_waist = 1;
+    Waist.stop_tick = 1;
     Waist.setAngleLimits(WAIST_MIN_ANGLE, WAIST_MAX_ANGLE);
-    // Waist.reset_encoder();
-    Waist.begin(regKp_waist, regKi_waist, regKd_waist);
+    Waist.set_safety_pins(WAIT_BRAKE, LIMIT_WAIST_MAX, LIMIT_WAIST_MIN);
+
+    Waist.begin(REG_KP_WAIST, REG_KI_WAIST, REG_KD_WAIST, REG_KP_WAIST_AGG, REG_KI_WAIST_AGG, REG_KD_WAIST_AGG);
+
+    Waist.reset_encoder();
+    Waist.set_zero_angle();
+    Waist.set_current_as_zero_angle_sw(WAIST_ZERO_ANGLE);
+    Waist.new_setpoint(0.0);
 #endif
 
     attach_all_interrupts();
@@ -482,6 +493,7 @@ void limit_waist_max_int()
         {
             limit_waist_max_activated = 1;
             Serial.println("Waist max limit reached");
+            Waist.new_setpoint(Waist.setpoint - 5.0f);
             Waist.stop();
         }
         else
@@ -501,6 +513,7 @@ void limit_waist_min_int()
         {
             limit_waist_min_activated = 1;
             Serial.println("Waist min limit reached");
+            Waist.new_setpoint(Waist.setpoint + 5.0f);
             Waist.stop();
         }
         else
