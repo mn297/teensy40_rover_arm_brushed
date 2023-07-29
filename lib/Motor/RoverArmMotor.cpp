@@ -50,6 +50,7 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
     encoder_error = 0;
     stop_tick = 0;
     fight_gravity = 0;
+    inverted = 1.0;
 
     _brake_pin = -1;
     _limit_pin_max = -1;
@@ -154,7 +155,6 @@ void RoverArmMotor::tick()
 {
     if (stop_tick)
     {
-        this->engage_brake();
         this->stop(); // stop the motor
     }
 /*------------------Check limit pins------------------*/
@@ -316,7 +316,6 @@ void RoverArmMotor::tick()
     // Output range from 1100-1900 us of a 2500 us period
     else if (escType == BLUE_ROBOTICS)
     {
-        this->disengage_brake();
         if (fight_gravity)
         {
             if (output < 0)
@@ -337,8 +336,8 @@ void RoverArmMotor::tick()
                 output = -25.0f;
             }
         }
-
-        volatile double output_actual = (1500.0f + output) * 100.0f / 2500.0f;
+        this->disengage_brake();
+        volatile double output_actual = (1500.0f + output * inverted) * 100.0f / 2500.0f;
         pwmInstance->setPWM(_pwm, _pwm_freq, output_actual);
         return;
     }

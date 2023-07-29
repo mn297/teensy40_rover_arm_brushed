@@ -28,7 +28,7 @@ extern RoverArmMotor Waist;
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
   while (!Serial)
     ;
 #if DEBUG_GDB_STUB == 1

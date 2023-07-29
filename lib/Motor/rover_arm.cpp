@@ -191,7 +191,8 @@ void rover_arm_setup(void)
 #if TEST_SHOULDER_SERVO == 1
     Shoulder.setAngleLimits(SHOULDER_MIN_ANGLE, SHOULDER_MAX_ANGLE);
     // Shoulder.reset_encoder();
-    Shoulder.set_safety_pins(SHOULDER_BRAKE, -1, -1);
+    Shoulder.stop_tick = 1;
+    Shoulder.set_safety_pins(SHOULDER_BRAKE, LIMIT_SHOULDER_MAX, LIMIT_SHOULDER_MIN);
     Shoulder.begin(REG_KP_SHOULDER, REG_KI_SHOULDER, REG_KD_SHOULDER, REG_KP_SHOULDER_AGG, REG_KI_SHOULDER_AGG, REG_KD_SHOULDER_AGG);
     Shoulder.set_current_as_zero_angle_sw(SHOULDER_ZERO_ANGLE);
     Shoulder.new_setpoint(0.0);
@@ -428,7 +429,7 @@ void limit_elbow_min_int()
 }
 #endif
 
-#if TEST_SHOULD_SERVO == 1
+#if TEST_SHOULDER_SERVO == 1
 void limit_shoulder_max_int()
 {
     unsigned long now = millis();
