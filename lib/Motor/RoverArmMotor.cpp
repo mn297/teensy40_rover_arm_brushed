@@ -181,6 +181,7 @@ void RoverArmMotor::tick()
         {
             this->stop();
             this->forward(10);
+            Serial.println("ADVANCING!");
 #if DEBUG_ROVER_ARM_MOTOR
             Serial.println("RoverArmMotor::tick() _limit_pin_min");
 #endif
@@ -326,15 +327,14 @@ void RoverArmMotor::tick()
                 {
                     output *= 1.0f;
                 }
-                Serial.printf("BEFORE RoverArmMotor::tick() output = %f\r\n", output);
+                // Serial.printf("BEFORE RoverArmMotor::tick() output = %f\r\n", output);
                 output = max(output, -220.0f);
-                Serial.printf("AFTER RoverArmMotor::tick() output = %f\r\n", output);
+                // Serial.printf("AFTER RoverArmMotor::tick() output = %f\r\n", output);
             }
             else
             {
                 // Light braking.
                 output = -25.0f;
-                Serial.printf("BRAKING output = %f\r\n", output);
             }
         }
 

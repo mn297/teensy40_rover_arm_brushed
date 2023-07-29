@@ -10,9 +10,9 @@
             "includePath": [
                 "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/include",
                 "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/src",
-                "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EEPROM",
                 "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/lib/TeensyDebug/src",
                 "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/lib/Motor",
+                "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EEPROM",
                 "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/SPI",
                 "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/.pio/libdeps/teensy40/Teensy_PWM/src",
                 "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/cores/teensy4",
@@ -121,9 +121,9 @@
                 "path": [
                     "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/include",
                     "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/src",
-                    "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EEPROM",
                     "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/lib/TeensyDebug/src",
                     "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/lib/Motor",
+                    "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/EEPROM",
                     "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/libraries/SPI",
                     "C:/Users/k6604/Documents/PlatformIO/Projects/teensy40_rover_arm_brushed/.pio/libdeps/teensy40/Teensy_PWM/src",
                     "C:/Users/k6604/.platformio/packages/framework-arduinoteensy/cores/teensy4",
