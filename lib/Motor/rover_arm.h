@@ -1,8 +1,8 @@
 // META SETTINGS---------------------------------------------------------------
 #define USE_TEENSY 1
 #define IRQ_DEBUG_PRIORITY 10
-#define BRUSHED_ARM 1
-#define BRUSHLESS_ARM 0
+#define BRUSHED_ARM 0
+#define BRUSHLESS_ARM 1
 
 // CONFIGURATION---------------------------------------------------------------
 #define TEST_ENCODER 0
@@ -64,19 +64,23 @@
 #define NO2 21
 #define NO3 20
 #define NO4 19
+#define NO5 18
+#define NO6 17
 
 #define ELBOW_BRAKE 14
 #define SHOULDER_BRAKE 15
 
 #define LIMIT_ELBOW_MAX NO1
 #define LIMIT_ELBOW_MIN NO2
-#define LIMIT_WAIST_MAX NO3
-#define LIMIT_WAIST_MIN NO4
+#define LIMIT_SHOULDER_MAX NO3
+#define LIMIT_SHOULDER_MIN NO4
+#define LIMIT_WAIST_MAX NO5
+#define LIMIT_WAIST_MIN NO6
 #endif
 
 // DEBUG SETTINGS---------------------------------------------------------------
 #define DEBUG_GDB_STUB 0
-#define DEBUG_PID 1
+#define DEBUG_PID 0
 #define DEBUG_ROVER_ARM_MOTOR 0
 #define DEBUG_PRINT_MOTOR 1
 #define DEBUG_ROVER_ARM_MOTOR_TICK 0

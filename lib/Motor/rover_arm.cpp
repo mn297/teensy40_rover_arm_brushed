@@ -277,25 +277,36 @@ void test_limit_switches()
     }
 }
 
-#define DEBOUNCE_DELAY 250 // Delay for 500 ms. Adjust as needed.
+#define DEBOUNCE_DELAY 100
 
-volatile unsigned long last_trigger_time_pitch_max = 0;
-volatile unsigned long last_trigger_time_pitch_min = 0;
 volatile unsigned long last_trigger_time_end_effector_max = 0;
 volatile unsigned long last_trigger_time_end_effector_min = 0;
+volatile unsigned long last_trigger_time_wrist_pitch_max = 0;
+volatile unsigned long last_trigger_time_wrist_pitch_min = 0;
+
+volatile unsigned long last_trigger_time_elbow_max = 0;
+volatile unsigned long last_trigger_time_elbow_min = 0;
+volatile unsigned long last_trigger_time_shoulder_max = 0;
+volatile unsigned long last_trigger_time_shoulder_min = 0;
+volatile unsigned long last_trigger_time_waist_max = 0;
+volatile unsigned long last_trigger_time_waist_min = 0;
 
 volatile int limit_wrist_pitch_max_activated = 0;
 volatile int limit_wrist_pitch_min_activated = 0;
 volatile int limit_end_effector_max_activated = 0;
 volatile int limit_end_effector_min_activated = 0;
+volatile int limit_elbow_max_activated = 0;
+volatile int limit_elbow_min_activated = 0;
+volatile int limit_shoulder_max_activated = 0;
+volatile int limit_shoulder_min_activated = 0;
 
 #if TEST_WRIST_PITCH_CYTRON == 1
 void limit_wrist_pitch_max_int()
 {
     unsigned long now = millis();
-    if (now - last_trigger_time_pitch_max > DEBOUNCE_DELAY)
+    if (now - last_trigger_time_wrist_pitch_max > DEBOUNCE_DELAY)
     {
-        last_trigger_time_pitch_max = now;
+        last_trigger_time_wrist_pitch_max = now;
         if (digitalRead(LIMIT_WRIST_PITCH_MAX) == LOW)
         {
             limit_wrist_pitch_max_activated = 1;
@@ -314,9 +325,9 @@ void limit_wrist_pitch_max_int()
 void limit_wrist_pitch_min_int()
 {
     unsigned long now = millis();
-    if (now - last_trigger_time_pitch_min > DEBOUNCE_DELAY)
+    if (now - last_trigger_time_wrist_pitch_min > DEBOUNCE_DELAY)
     {
-        last_trigger_time_pitch_min = now;
+        last_trigger_time_wrist_pitch_min = now;
         bool is_low = digitalRead(LIMIT_WRIST_PITCH_MIN) == LOW;
         limit_wrist_pitch_min_activated = is_low;
         if (is_low)
@@ -379,18 +390,19 @@ void limit_end_effector_min_int()
 void limit_elbow_max_int()
 {
     unsigned long now = millis();
-    if (now - last_trigger_time_end_effector_max > DEBOUNCE_DELAY)
+    if (now - last_trigger_time_elbow_max > DEBOUNCE_DELAY)
     {
-        last_trigger_time_end_effector_max = now;
+        last_trigger_time_elbow_max = now;
         if (digitalRead(LIMIT_ELBOW_MAX) == LOW)
         {
-            limit_end_effector_max_activated = 1;
+            limit_elbow_max_activated = 1;
             Serial.println("Elbow max limit reached");
+            Elbow.new_setpoint(Elbow.setpoint - 5.0f);
             Elbow.stop();
         }
         else
         {
-            limit_end_effector_max_activated = 0;
+            limit_elbow_max_activated = 0;
         }
     }
 }
@@ -398,13 +410,14 @@ void limit_elbow_max_int()
 void limit_elbow_min_int()
 {
     unsigned long now = millis();
-    if (now - last_trigger_time_end_effector_min > DEBOUNCE_DELAY)
+    if (now - last_trigger_time_elbow_min > DEBOUNCE_DELAY)
     {
-        last_trigger_time_end_effector_min = now;
+        last_trigger_time_elbow_min = now;
         if (digitalRead(LIMIT_ELBOW_MIN) == LOW)
         {
-            limit_end_effector_min_activated = 1;
+            limit_elbow_min_activated = 1;
             Serial.println("Elbow min limit reached");
+            Elbow.new_setpoint(Elbow.setpoint + 5.0f);
             Elbow.stop();
         }
         else
@@ -415,22 +428,64 @@ void limit_elbow_min_int()
 }
 #endif
 
+#if TEST_SHOULD_SERVO == 1
+void limit_shoulder_max_int()
+{
+    unsigned long now = millis();
+    if (now - last_trigger_time_shoulder_max > DEBOUNCE_DELAY)
+    {
+        last_trigger_time_shoulder_max = now;
+        if (digitalRead(LIMIT_SHOULDER_MAX) == LOW)
+        {
+            limit_shoulder_max_activated = 1;
+            Serial.println("Shoulder max limit reached");
+            Shoulder.new_setpoint(Shoulder.setpoint - 5.0f);
+            Shoulder.stop();
+        }
+        else
+        {
+            limit_shoulder_max_activated = 0;
+        }
+    }
+}
+
+void limit_shoulder_min_int()
+{
+    unsigned long now = millis();
+    if (now - last_trigger_time_shoulder_min > DEBOUNCE_DELAY)
+    {
+        last_trigger_time_shoulder_min = now;
+        if (digitalRead(LIMIT_SHOULDER_MIN) == LOW)
+        {
+            limit_shoulder_min_activated = 1;
+            Serial.println("Shoulder min limit reached");
+            Shoulder.new_setpoint(Shoulder.setpoint + 5.0f);
+            Shoulder.stop();
+        }
+        else
+        {
+            limit_shoulder_min_activated = 0;
+        }
+    }
+}
+#endif
+
 #if TEST_WAIST_SERVO == 1
 void limit_waist_max_int()
 {
     unsigned long now = millis();
-    if (now - last_trigger_time_end_effector_max > DEBOUNCE_DELAY)
+    if (now - last_trigger_time_waist_max > DEBOUNCE_DELAY)
     {
-        last_trigger_time_end_effector_max = now;
+        last_trigger_time_waist_max = now;
         if (digitalRead(LIMIT_WAIST_MAX) == LOW)
         {
-            limit_end_effector_max_activated = 1;
+            limit_waist_max_activated = 1;
             Serial.println("Waist max limit reached");
             Waist.stop();
         }
         else
         {
-            limit_end_effector_max_activated = 0;
+            limit_waist_max_activated = 0;
         }
     }
 }
@@ -438,21 +493,22 @@ void limit_waist_max_int()
 void limit_waist_min_int()
 {
     unsigned long now = millis();
-    if (now - last_trigger_time_end_effector_min > DEBOUNCE_DELAY)
+    if (now - last_trigger_time_waist_min > DEBOUNCE_DELAY)
     {
-        last_trigger_time_end_effector_min = now;
+        last_trigger_time_waist_min = now;
         if (digitalRead(LIMIT_WAIST_MIN) == LOW)
         {
-            limit_end_effector_min_activated = 1;
+            limit_waist_min_activated = 1;
             Serial.println("Waist min limit reached");
             Waist.stop();
         }
         else
         {
-            limit_end_effector_min_activated = 0;
+            limit_waist_min_activated = 0;
         }
     }
 }
+
 #endif
 
 void attach_all_interrupts()
@@ -470,6 +526,11 @@ void attach_all_interrupts()
 #if TEST_ELBOX_SERVO == 1
     attachInterrupt(digitalPinToInterrupt(LIMIT_ELBOW_MAX), limit_elbow_max_int, CHANGE);
     attachInterrupt(digitalPinToInterrupt(LIMIT_ELBOW_MIN), limit_elbow_min_int, CHANGE);
+#endif
+
+#if TEST_SHOULDER_SERVO == 1
+    attachInterrupt(digitalPinToInterrupt(LIMIT_SHOULDER_MAX), limit_shoulder_max_int, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(LIMIT_SHOULDER_MIN), limit_shoulder_min_int, CHANGE);
 #endif
 
 #if TEST_WAIST_SERVO == 1
@@ -518,6 +579,9 @@ void serialEvent()
 #if TEST_SHOULDER_SERVO == 1
         bool result5 = Shoulder.new_setpoint(param1);
 #endif
+#if TEST_WAIST_SERVO == 1
+        bool result6 = Shoulder.new_setpoint(param1);
+#endif
 
         // Print status.
 #if TEST_WRIST_ROLL_CYTRON == 1
@@ -534,6 +598,9 @@ void serialEvent()
 #endif
 #if TEST_SHOULDER_SERVO == 1
         Serial.printf("Shoulder new_setpoint at %lf result: %d\r\n", param1, result5);
+#endif
+#if TEST_WAIST_SERVO == 1
+        Serial.printf("Waist new_setpoint at %lf result: %d\r\n", param1, result5);
 #endif
     }
 }
