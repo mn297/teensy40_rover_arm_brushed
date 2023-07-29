@@ -226,6 +226,7 @@ void RoverArmMotor::tick()
         output = 0;
         this->engage_brake();
         this->stop(); // stop the motor
+        internalPIDInstance->reset_integral();
         return;
     }
 
@@ -326,9 +327,7 @@ void RoverArmMotor::tick()
                 {
                     output *= 1.0f;
                 }
-                // Serial.printf("BEFORE RoverArmMotor::tick() output = %f\r\n", output);
                 output = max(output, -220.0f);
-                // Serial.printf("AFTER RoverArmMotor::tick() output = %f\r\n", output);
             }
             else
             {
@@ -336,6 +335,21 @@ void RoverArmMotor::tick()
                 output = -25.0f;
             }
         }
+        // if (fight_gravity_2) {
+        //     if (output < 0)
+        //     {
+        //         output *= 1.6f;
+        //         output += 20.0f;
+        //         if (diff < 10.0f)
+        //         {
+        //             output *= 1.0f;
+        //         }
+        //         output = max(output, -230.0f);
+        //     }
+        //     else
+        //     {
+        //     }
+        // }
         this->disengage_brake();
         volatile double output_actual = (1500.0f + output * inverted) * 100.0f / 2500.0f;
         pwmInstance->setPWM(_pwm, _pwm_freq, output_actual);

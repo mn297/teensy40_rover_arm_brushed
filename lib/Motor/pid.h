@@ -39,6 +39,7 @@ public:
     double calculate(double setpoint, double pv);
     ~PID();
     void setPID(double Kp, double Ki, double Kd);
+    void reset_integral();
 
 private:
     PIDImpl *pimpl;

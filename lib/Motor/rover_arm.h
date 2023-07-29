@@ -80,7 +80,7 @@
 
 // DEBUG SETTINGS---------------------------------------------------------------
 #define DEBUG_GDB_STUB 0
-#define DEBUG_PID 0
+#define DEBUG_PID 1
 #define DEBUG_ROVER_ARM_MOTOR 0
 #define DEBUG_PRINT_MOTOR 1
 #define DEBUG_ROVER_ARM_MOTOR_TICK 0
@@ -154,10 +154,10 @@
 
 // SHOULDER_SERVO
 #define REG_KP_SHOULDER 0.8f
-#define REG_KI_SHOULDER 0.8f
+#define REG_KI_SHOULDER 1.5f
 #define REG_KD_SHOULDER 0
 #define REG_KP_SHOULDER_AGG 1.0f
-#define REG_KI_SHOULDER_AGG 0.9f
+#define REG_KI_SHOULDER_AGG 1.8f
 #define REG_KD_SHOULDER_AGG 0
 #define SHOULDER_MIN_ANGLE -60.0f
 #define SHOULDER_MAX_ANGLE 90.0f

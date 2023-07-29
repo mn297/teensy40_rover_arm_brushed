@@ -62,11 +62,17 @@ PID::~PID()
 {
     delete pimpl;
 }
+
 void PID::setPID(double Kp, double Ki, double Kd)
 {
     pimpl->_Kp = Kp;
     pimpl->_Ki = Ki;
     pimpl->_Kd = Kd;
+}
+
+void PID::reset_integral()
+{
+    pimpl->_integral = 0;
 }
 
 /**
