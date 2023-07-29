@@ -1,8 +1,8 @@
 // META SETTINGS---------------------------------------------------------------
 #define USE_TEENSY 1
 #define IRQ_DEBUG_PRIORITY 10
-#define BRUSHED_ARM 1
-#define BRUSHLESS_ARM 0
+#define BRUSHED_ARM 0
+#define BRUSHLESS_ARM 1
 
 // CONFIGURATION---------------------------------------------------------------
 #define TEST_ENCODER 0
@@ -103,7 +103,7 @@
 
 #if BRUSHLESS_ARM == 1
 #define TEST_ELBOW_SERVO 1
-#define TEST_SHOULDER_SERVO 0
+#define TEST_SHOULDER_SERVO 1
 #define TEST_WAIST_SERVO 0
 #endif
 
