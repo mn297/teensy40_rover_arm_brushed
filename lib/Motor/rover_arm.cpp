@@ -177,7 +177,7 @@ void rover_arm_setup(void)
 #if TEST_ELBOW_SERVO == 1
     Elbow.setAngleLimits(ELBOW_MIN_ANGLE, ELBOW_MAX_ANGLE);
     // Elbow.reset_encoder();
-    Elbow.stop_tick = 0;
+    Elbow.stop_tick = 1;
     Elbow.fight_gravity = 1;
     Elbow.set_safety_pins(ELBOW_BRAKE, LIMIT_ELBOW_MAX, LIMIT_ELBOW_MIN);
     Elbow.begin(REG_KP_ELBOW, REG_KI_ELBOW, REG_KD_ELBOW, REG_KP_ELBOW_AGG, REG_KI_ELBOW_AGG, REG_KD_ELBOW_AGG);
@@ -524,7 +524,7 @@ void attach_all_interrupts()
     attachInterrupt(digitalPinToInterrupt(LIMIT_END_EFFECTOR_MIN), limit_end_effector_min_int, CHANGE);
 #endif
 
-#if TEST_ELBOX_SERVO == 1
+#if TEST_ELBOW_SERVO == 1
     attachInterrupt(digitalPinToInterrupt(LIMIT_ELBOW_MAX), limit_elbow_max_int, CHANGE);
     attachInterrupt(digitalPinToInterrupt(LIMIT_ELBOW_MIN), limit_elbow_min_int, CHANGE);
 #endif

@@ -80,7 +80,7 @@
 
 // DEBUG SETTINGS---------------------------------------------------------------
 #define DEBUG_GDB_STUB 0
-#define DEBUG_PID 1
+#define DEBUG_PID 0
 #define DEBUG_ROVER_ARM_MOTOR 0
 #define DEBUG_PRINT_MOTOR 1
 #define DEBUG_ROVER_ARM_MOTOR_TICK 0
@@ -99,8 +99,8 @@
 #endif
 
 #if BRUSHLESS_ARM == 1
-#define TEST_ELBOW_SERVO 0
-#define TEST_SHOULDER_SERVO 1
+#define TEST_ELBOW_SERVO 1
+#define TEST_SHOULDER_SERVO 0
 #define TEST_WAIST_SERVO 0
 #endif
 
@@ -142,15 +142,15 @@
 #define END_EFFECTOR_GEAR_RATIO 1.0f
 
 // ELBOW_SERVO
-#define REG_KP_ELBOW 0.8f
-#define REG_KI_ELBOW 3.5f
+#define REG_KP_ELBOW 0.6f
+#define REG_KI_ELBOW 2.5f
 #define REG_KD_ELBOW 0
-#define REG_KP_ELBOW_AGG 1.0f
-#define REG_KI_ELBOW_AGG 3.5f
+#define REG_KP_ELBOW_AGG 0.8f
+#define REG_KI_ELBOW_AGG 3.0f
 #define REG_KD_ELBOW_AGG 0
 #define ELBOW_MIN_ANGLE -70.0f
 #define ELBOW_MAX_ANGLE 75.0f
-#define ELBOW_ZERO_ANGLE (245.0f + (-1.0f * 360.0f))
+#define ELBOW_ZERO_ANGLE (240.0f + (0 * 360.0f))
 
 // SHOULDER_SERVO
 #define REG_KP_SHOULDER 0.8f

@@ -52,7 +52,7 @@ public:
 
 PID::PID(double dt, double max, double min, double Kp, double Ki, double Kd)
 {
-    pimpl = new PIDImpl(dt, max, min, Kp, Kd, Ki);
+    pimpl = new PIDImpl(dt, max, min, Kp, Ki, Kd);
 }
 double PID::calculate(double setpoint, double pv)
 {
@@ -81,8 +81,8 @@ void PID::reset_integral()
 PIDImpl::PIDImpl(double dt, double max, double min, double Kp, double Ki, double Kd) : _dt(dt),
                                                                                        _max(max),
                                                                                        _min(min),
-                                                                                       _Ki(Ki),
                                                                                        _Kp(Kp),
+                                                                                       _Ki(Ki),
                                                                                        _Kd(Kd),
                                                                                        _pre_error(0),
                                                                                        _integral(0)
@@ -133,7 +133,7 @@ PIDImpl::~PIDImpl()
 }
 void PIDImpl::setPID(double Kp, double Ki, double Kd)
 {
-    Serial.printf("Kp: %f, Kd: %f, Ki: %f\r\n", Kp, Kd, Ki);
+    Serial.printf("Kp: %f, Kd: %f, Ki: %f\r\n", Kp, Ki, Kd);
     _Kp = Kp;
     _Ki = Ki;
     _Kd = Kd;

@@ -101,7 +101,8 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     else if (escType == BLUE_ROBOTICS)
     {
         Serial.println("RoverArmMotor::begin() 4 SERVO");
-        internalPIDInstance = new PID(PID_DT, 375.0, -375.0, regP, regI, regD);
+        // Max is actually 400 but this is safer.
+        internalPIDInstance = new PID(PID_DT, 300.0, -300.0, regP, regI, regD);
     }
 
     /*------------------Get setpoint------------------*/
