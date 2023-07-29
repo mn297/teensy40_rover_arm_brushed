@@ -170,6 +170,7 @@ void rover_arm_setup(void)
 #if TEST_END_EFFECTOR_CYTRON == 1
     End_Effector.wrist_waist = 0;
     End_Effector.setAngleLimits(MIN_FLOAT, MAX_FLOAT);
+    pinMode(END_EFFECTOR_LASER, OUTPUT);
     End_Effector.begin(0, 0, 0, 0, 0, 0);
 #endif
 
@@ -370,10 +371,12 @@ void limit_end_effector_max_int()
             limit_end_effector_max_activated = 1;
             Serial.println("End effector max limit reached");
             End_Effector.stop();
+            End_Effector.reverse();
         }
         else
         {
             limit_end_effector_max_activated = 0;
+            End_Effector.stop();
         }
     }
 }
@@ -389,10 +392,12 @@ void limit_end_effector_min_int()
             limit_end_effector_min_activated = 1;
             Serial.println("End effector min limit reached");
             End_Effector.stop();
+            End_Effector.forward();
         }
         else
         {
             limit_end_effector_min_activated = 0;
+            End_Effector.stop();
         }
     }
 }

@@ -9,7 +9,7 @@
 #define SKIP_MASTERING 0
 #define MASTERING 0
 #define MASTERING_TEST 0
-#define TICK 0
+#define TICK 1
 #define TEST_LOOP 1
 #define TEST_LIMIT_SWITCH 0
 
@@ -44,6 +44,9 @@
 #define NO2 21
 #define NO3 20
 #define NO4 19
+#define NO5 18
+
+#define END_EFFECTOR_LASER NO5
 
 #define LIMIT_WRIST_PITCH_MAX NO1
 #define LIMIT_WRIST_PITCH_MIN NO2
@@ -94,8 +97,8 @@
 // MOTOR SETTINGS---------------------------------------------------------------
 #if BRUSHED_ARM == 1
 #define TEST_WRIST_ROLL_CYTRON 0
-#define TEST_WRIST_PITCH_CYTRON 0
-#define TEST_END_EFFECTOR_CYTRON 1
+#define TEST_WRIST_PITCH_CYTRON 1
+#define TEST_END_EFFECTOR_CYTRON 0
 #endif
 
 #if BRUSHLESS_ARM == 1
@@ -120,10 +123,10 @@
 
 // WRIST_PITCH_CYTRON
 #define REG_KP_WRIST_PITCH 1.2f
-#define REG_KI_WRIST_PITCH 1.5f
+#define REG_KI_WRIST_PITCH 1.8f
 #define REG_KD_WRIST_PITCH 0
 #define REG_KP_WRIST_PITCH_AGG 1.8f
-#define REG_KI_WRIST_PITCH_AGG 1.3f
+#define REG_KI_WRIST_PITCH_AGG 2.3f
 #define REG_KD_WRIST_PITCH_AGG 0
 #define WRIST_PITCH_MIN_ANGLE -75.0f
 // #define WRIST_PITCH_MAX_ANGLE 75.0f

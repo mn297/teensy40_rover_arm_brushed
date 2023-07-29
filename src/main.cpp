@@ -40,13 +40,7 @@ void setup()
 
 void loop()
 {
-  End_Effector.reverse(99);
-  Serial.println("End_Effector.reverse(99)");
-  delay(2000);
-  End_Effector.forward(99);
-  Serial.println("End_Effector.forward(99)");
-  delay(2000);
 #if TEST_LOOP == 1
-  // rover_arm_loop();
+  rover_arm_loop();
 #endif
 }
