@@ -51,6 +51,8 @@ RoverArmMotor::RoverArmMotor(int pwm_pin, int dir_pin, int encoder_pin, int esc_
     stop_tick = 0;
     fight_gravity = 0;
     inverted = 1.0;
+    inverted_angle = 0;
+    error_range = 0.6;
 
     _brake_pin = -1;
     _limit_pin_max = -1;
@@ -219,7 +221,7 @@ void RoverArmMotor::tick()
     {
         diff = abs(currentAngle - setpoint);
     }
-    if (diff < (0.5f + fight_gravity * 2.0f))
+    if (diff < error_range)
     {
 #if DEBUG_ROVER_ARM_MOTOR == 1
         Serial.println("RoverArmMotor::tick() diff < 0.5");
@@ -592,7 +594,11 @@ int RoverArmMotor::get_current_angle_sw(double *angle)
     }
     else
     {
-        *angle = diff;
+        if (inverted_angle) {
+            *angle = -diff;
+        } else {
+            *angle = diff;
+        }
     }
     return 0; // return 0 on success
 }

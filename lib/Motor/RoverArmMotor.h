@@ -118,6 +118,8 @@ public: // TESTING only
     int fight_gravity;
     int fight_gravity_2;
     float inverted;
+    int inverted_angle;
+    double error_range;
 
     enum ActuationStates
     {

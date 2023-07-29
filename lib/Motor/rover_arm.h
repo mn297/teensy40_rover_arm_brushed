@@ -80,8 +80,8 @@
 #define LIMIT_ELBOW_MIN NO2
 #define LIMIT_SHOULDER_MAX NO3
 #define LIMIT_SHOULDER_MIN NO4
-#define LIMIT_WAIST_MAX NO5
-#define LIMIT_WAIST_MIN NO6
+#define LIMIT_WAIST_MAX NO6
+#define LIMIT_WAIST_MIN NO5
 #endif
 
 // DEBUG SETTINGS---------------------------------------------------------------
@@ -105,9 +105,9 @@
 #endif
 
 #if BRUSHLESS_ARM == 1
-#define TEST_ELBOW_SERVO 1
+#define TEST_ELBOW_SERVO 0
 #define TEST_SHOULDER_SERVO 0
-#define TEST_WAIST_SERVO 0
+#define TEST_WAIST_SERVO 1
 #endif
 
 #define ELBOW_GEAR_RATIO 1.0f
@@ -155,8 +155,8 @@
 #define REG_KP_ELBOW_AGG 0.8f
 #define REG_KI_ELBOW_AGG 3.0f
 #define REG_KD_ELBOW_AGG 0
-#define ELBOW_MIN_ANGLE -70.0f
-#define ELBOW_MAX_ANGLE 75.0f
+#define ELBOW_MIN_ANGLE -20.0f
+#define ELBOW_MAX_ANGLE 70.0f
 #define ELBOW_ZERO_ANGLE (240.0f + (0 * 360.0f))
 
 // SHOULDER_SERVO
@@ -166,20 +166,21 @@
 #define REG_KP_SHOULDER_AGG 1.0f
 #define REG_KI_SHOULDER_AGG 1.8f
 #define REG_KD_SHOULDER_AGG 0
-#define SHOULDER_MIN_ANGLE -60.0f
-#define SHOULDER_MAX_ANGLE 90.0f
+#define SHOULDER_MIN_ANGLE -50.0f
+#define SHOULDER_MAX_ANGLE 70.0f
 #define SHOULDER_ZERO_ANGLE 91.0f + (-256.0f * 360.0f)
 
 // WAIST_SERVO
-#define REG_KP_WAIST 0.4f
-#define REG_KI_WAIST 0.1f
-#define REG_KD_WAIST 0.1f
-#define REG_KP_WAIST_AGG 0.6f
-#define REG_KI_WAIST_AGG 0.1f
-#define REG_KD_WAIST_AGG 0.1f
-#define WAIST_MIN_ANGLE -125.97f
-#define WAIST_MAX_ANGLE 118.76f
+#define REG_KP_WAIST 0.2f
+#define REG_KI_WAIST 0.8f
+#define REG_KD_WAIST 0
+#define REG_KP_WAIST_AGG 0.3f
+#define REG_KI_WAIST_AGG 1.0f
+#define REG_KD_WAIST_AGG 0
+#define WAIST_MIN_ANGLE -90.0f
+#define WAIST_MAX_ANGLE 90.0f
 #define WAIST_ZERO_ANGLE 151.0f + (-1.0f * 360.0f)
+#define WAIST_GEAR_RATIO 2.33f
 
 // FUNCTION PROTOTYPES----------------------------------------------------------
 void print_motor(char *msg, void *pMotor);

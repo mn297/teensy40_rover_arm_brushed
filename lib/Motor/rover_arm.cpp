@@ -179,6 +179,7 @@ void rover_arm_setup(void)
     Elbow.setAngleLimits(ELBOW_MIN_ANGLE, ELBOW_MAX_ANGLE);
     Elbow.stop_tick = 1;
     Elbow.fight_gravity = 1;
+    Waist.error_range = 3.0f;
     Elbow.set_safety_pins(ELBOW_BRAKE, LIMIT_ELBOW_MAX, LIMIT_ELBOW_MIN);
 
     Elbow.begin(REG_KP_ELBOW, REG_KI_ELBOW, REG_KD_ELBOW, REG_KP_ELBOW_AGG, REG_KI_ELBOW_AGG, REG_KD_ELBOW_AGG);
@@ -193,6 +194,7 @@ void rover_arm_setup(void)
 #if TEST_SHOULDER_SERVO == 1
     Shoulder.setAngleLimits(SHOULDER_MIN_ANGLE, SHOULDER_MAX_ANGLE);
     Shoulder.stop_tick = 1;
+    Shoulder.error_range = 1.0f;
     Shoulder.set_safety_pins(SHOULDER_BRAKE, LIMIT_SHOULDER_MAX, LIMIT_SHOULDER_MIN);
 
     Shoulder.begin(REG_KP_SHOULDER, REG_KI_SHOULDER, REG_KD_SHOULDER, REG_KP_SHOULDER_AGG, REG_KI_SHOULDER_AGG, REG_KD_SHOULDER_AGG);
@@ -207,6 +209,9 @@ void rover_arm_setup(void)
 #if TEST_WAIST_SERVO == 1
     Waist.wrist_waist = 0;
     Waist.stop_tick = 1;
+    Waist.inverted_angle = 1;
+    Waist.error_range = 2.0f;
+    Waist.set_gear_ratio(WAIST_GEAR_RATIO);
     Waist.setAngleLimits(WAIST_MIN_ANGLE, WAIST_MAX_ANGLE);
     Waist.set_safety_pins(-1, LIMIT_WAIST_MAX, LIMIT_WAIST_MIN);
 
