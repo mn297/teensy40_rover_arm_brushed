@@ -40,6 +40,12 @@ void setup()
 
 void loop()
 {
+  // Waist.forward(4);
+  // delay(2000);
+  // Waist.stop();
+  // delay(1000);
+  // Waist.reverse(15);
+  // delay(1000);
 #if TEST_LOOP == 1
   rover_arm_loop();
 #endif

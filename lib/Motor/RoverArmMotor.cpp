@@ -96,13 +96,13 @@ void RoverArmMotor::begin(double regP, double regI, double regD, double aggP, do
     if (escType == CYTRON)
     {
         Serial.println("RoverArmMotor::begin() 4 CYTRON");
-        internalPIDInstance = new PID(PID_DT, 99.0, -99.0, regP, regI, regD);
+        internalPIDInstance = new PID(PID_DT, CYTRON_MAX_OUTPUT, -CYTRON_MAX_OUTPUT, regP, regI, regD);
     }
     else if (escType == BLUE_ROBOTICS)
     {
         Serial.println("RoverArmMotor::begin() 4 SERVO");
         // Max is actually 400 but this is safer.
-        internalPIDInstance = new PID(PID_DT, 300.0, -300.0, regP, regI, regD);
+        internalPIDInstance = new PID(PID_DT, SERVO_MAX_OUTPUT, -SERVO_MAX_OUTPUT, regP, regI, regD);
     }
 
     /*------------------Get setpoint------------------*/
@@ -219,7 +219,7 @@ void RoverArmMotor::tick()
     {
         diff = abs(currentAngle - setpoint);
     }
-    if (diff < (0.8f + fight_gravity * 3.0f))
+    if (diff < (0.5f + fight_gravity * 2.0f))
     {
 #if DEBUG_ROVER_ARM_MOTOR == 1
         Serial.println("RoverArmMotor::tick() diff < 0.5");
@@ -333,24 +333,10 @@ void RoverArmMotor::tick()
             else
             {
                 // Light braking.
-                output = -25.0f;
+                // output = -25.0f;
+                output = 0.0f;
             }
         }
-        // if (fight_gravity_2) {
-        //     if (output < 0)
-        //     {
-        //         output *= 1.6f;
-        //         output += 20.0f;
-        //         if (diff < 10.0f)
-        //         {
-        //             output *= 1.0f;
-        //         }
-        //         output = max(output, -230.0f);
-        //     }
-        //     else
-        //     {
-        //     }
-        // }
         this->disengage_brake();
         volatile double output_actual = (1500.0f + output * inverted) * 100.0f / 2500.0f;
         pwmInstance->setPWM(_pwm, _pwm_freq, output_actual);
@@ -375,7 +361,8 @@ int RoverArmMotor::forward(int percentage_speed)
     else if (escType == BLUE_ROBOTICS)
     {
         this->disengage_brake();
-        double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE + (BLUE_ROBOTICS_STOP_DUTY_CYCLE * percentage_speed / 100); // TODEBUG
+        double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE + ((100 - BLUE_ROBOTICS_STOP_DUTY_CYCLE) * percentage_speed / 100); // TODEBUG
+        Serial.printf("duty_cycle = %f\r\n", duty_cycle);
         pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
         return 0;
     }
@@ -398,7 +385,8 @@ int RoverArmMotor::reverse(int percentage_speed)
     else if (escType == BLUE_ROBOTICS)
     {
         this->disengage_brake();
-        double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE - (BLUE_ROBOTICS_STOP_DUTY_CYCLE * percentage_speed / 100);
+        double duty_cycle = BLUE_ROBOTICS_STOP_DUTY_CYCLE - ((100 - BLUE_ROBOTICS_STOP_DUTY_CYCLE) * percentage_speed / 100); // TODEBUG
+        Serial.printf("duty_cycle = %f\r\n", duty_cycle);
         pwmInstance->setPWM(_pwm, _pwm_freq, duty_cycle);
         return 0;
     }

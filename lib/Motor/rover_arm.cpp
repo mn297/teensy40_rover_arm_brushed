@@ -205,10 +205,10 @@ void rover_arm_setup(void)
 
     /*---WAIST_SERVO setup---*/
 #if TEST_WAIST_SERVO == 1
-    Waist.wrist_waist = 1;
+    Waist.wrist_waist = 0;
     Waist.stop_tick = 1;
     Waist.setAngleLimits(WAIST_MIN_ANGLE, WAIST_MAX_ANGLE);
-    Waist.set_safety_pins(WAIT_BRAKE, LIMIT_WAIST_MAX, LIMIT_WAIST_MIN);
+    Waist.set_safety_pins(-1, LIMIT_WAIST_MAX, LIMIT_WAIST_MIN);
 
     Waist.begin(REG_KP_WAIST, REG_KI_WAIST, REG_KD_WAIST, REG_KP_WAIST_AGG, REG_KI_WAIST_AGG, REG_KD_WAIST_AGG);
 
@@ -312,6 +312,8 @@ volatile int limit_elbow_max_activated = 0;
 volatile int limit_elbow_min_activated = 0;
 volatile int limit_shoulder_max_activated = 0;
 volatile int limit_shoulder_min_activated = 0;
+volatile int limit_waist_max_activated = 0;
+volatile int limit_waist_min_activated = 0;
 
 #if TEST_WRIST_PITCH_CYTRON == 1
 void limit_wrist_pitch_max_int()
@@ -599,7 +601,7 @@ void serialEvent()
         bool result5 = Shoulder.new_setpoint(param1);
 #endif
 #if TEST_WAIST_SERVO == 1
-        bool result6 = Shoulder.new_setpoint(param1);
+        bool result6 = Waist.new_setpoint(param1);
 #endif
 
         // Print status.
@@ -619,7 +621,7 @@ void serialEvent()
         Serial.printf("Shoulder new_setpoint at %lf result: %d\r\n", param1, result5);
 #endif
 #if TEST_WAIST_SERVO == 1
-        Serial.printf("Waist new_setpoint at %lf result: %d\r\n", param1, result5);
+        Serial.printf("Waist new_setpoint at %lf result: %d\r\n", param1, result6);
 #endif
     }
 }

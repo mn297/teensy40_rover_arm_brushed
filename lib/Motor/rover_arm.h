@@ -17,6 +17,9 @@
 #define PID_DT (PID_PERIOD_US * 1e-6f)
 #define ROVER_LOOP_PERIOD_MS 250
 
+#define CYTRON_MAX_OUTPUT 99.0f
+#define SERVO_MAX_OUTPUT 300.0f
+
 // TEENSY PINS------------------------------------------------------------------
 #ifdef USE_TEENSY
 // Teensy 4.0 compatibility.
@@ -55,7 +58,7 @@
 #endif
 
 #if BRUSHLESS_ARM == 1
-#define DELAY_FACTOR 2
+#define DELAY_FACTOR 1.5
 #define CS1 10
 #define CS2 9
 #define CS3 8
@@ -103,7 +106,7 @@
 
 #if BRUSHLESS_ARM == 1
 #define TEST_ELBOW_SERVO 1
-#define TEST_SHOULDER_SERVO 1
+#define TEST_SHOULDER_SERVO 0
 #define TEST_WAIST_SERVO 0
 #endif
 
@@ -128,7 +131,8 @@
 #define REG_KP_WRIST_PITCH_AGG 1.8f
 #define REG_KI_WRIST_PITCH_AGG 2.3f
 #define REG_KD_WRIST_PITCH_AGG 0
-#define WRIST_PITCH_MIN_ANGLE -75.0f
+// #define WRIST_PITCH_MIN_ANGLE -75.0f
+#define WRIST_PITCH_MIN_ANGLE -35.0f
 // #define WRIST_PITCH_MAX_ANGLE 75.0f
 #define WRIST_PITCH_MAX_ANGLE 38.0f
 #define WRIST_PITCH_ZERO_ANGLE (326.0f + (-1.0f * 360.0f))
@@ -164,7 +168,7 @@
 #define REG_KD_SHOULDER_AGG 0
 #define SHOULDER_MIN_ANGLE -60.0f
 #define SHOULDER_MAX_ANGLE 90.0f
-#define SHOULDER_ZERO_ANGLE 86.0f + (-256.0f * 360.0f)
+#define SHOULDER_ZERO_ANGLE 91.0f + (-256.0f * 360.0f)
 
 // WAIST_SERVO
 #define REG_KP_WAIST 0.4f
@@ -175,7 +179,7 @@
 #define REG_KD_WAIST_AGG 0.1f
 #define WAIST_MIN_ANGLE -125.97f
 #define WAIST_MAX_ANGLE 118.76f
-#define WAIST_ZERO_ANGLE 0
+#define WAIST_ZERO_ANGLE 151.0f + (-1.0f * 360.0f)
 
 // FUNCTION PROTOTYPES----------------------------------------------------------
 void print_motor(char *msg, void *pMotor);
